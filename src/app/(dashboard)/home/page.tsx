@@ -43,11 +43,11 @@ function formatRelativeDate(iso: string) {
   if (hours < 24) return `${hours}h ago`
   if (days === 1) return 'Yesterday'
   if (days < 7) return `${days} days ago`
-  return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+  return new Date(iso).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })
 }
 
-function formatStake(pence: number) {
-  return `£${pence / 100}`
+function formatStake(cents: number) {
+  return `R${(cents / 100).toLocaleString('en-ZA')}`
 }
 
 function getStatusBadge(bet: BetRecord) {
@@ -93,7 +93,7 @@ export default function HomePage() {
   const totalWon = bets
     .filter(b => b.status === 'paid' || b.status === 'verified')
     .reduce((sum, b) => sum + b.potential_win_pence, 0)
-  const wonDisplay = totalWon === 0 ? '£0' : `£${(totalWon / 100).toLocaleString('en-GB')}`
+  const wonDisplay = totalWon === 0 ? 'R0' : `R${(totalWon / 100).toLocaleString('en-ZA')}`
 
   return (
     <PhoneFrame statusTheme="dark">
@@ -116,7 +116,7 @@ export default function HomePage() {
         {/* Hero play card */}
         <div className="home-hero-card">
           <div className="home-hero-label">Today's Challenge</div>
-          <div className="home-hero-title">One Shot.<br />£50,000.</div>
+          <div className="home-hero-title">One Shot.<br />R1,000,000.</div>
           <div className="home-hero-sub">Select a course and back yourself on any par-3</div>
           <button
             className="btn-gold"

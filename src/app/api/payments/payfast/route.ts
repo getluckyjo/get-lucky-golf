@@ -19,10 +19,11 @@ const ONSITE_URL = SANDBOX
 // ZAR stake amounts per tier — update to match your live pricing
 // ---------------------------------------------------------------------------
 const TIER_ZAR: Record<string, { amount: string; itemName: string }> = {
-  tier_1: { amount: '50.00',  itemName: 'Get Lucky Golf – R50 Hole-in-One Entry'  },
-  tier_2: { amount: '100.00', itemName: 'Get Lucky Golf – R100 Hole-in-One Entry' },
-  tier_3: { amount: '200.00', itemName: 'Get Lucky Golf – R200 Hole-in-One Entry' },
-  tier_4: { amount: '500.00', itemName: 'Get Lucky Golf – R500 Hole-in-One Entry' },
+  tier_1: { amount: '50.00',   itemName: 'Get Lucky Golf – R50 Hole-in-One Entry'    },
+  tier_2: { amount: '100.00',  itemName: 'Get Lucky Golf – R100 Hole-in-One Entry'   },
+  tier_3: { amount: '250.00',  itemName: 'Get Lucky Golf – R250 Hole-in-One Entry'   },
+  tier_4: { amount: '500.00',  itemName: 'Get Lucky Golf – R500 Hole-in-One Entry'   },
+  tier_5: { amount: '1000.00', itemName: 'Get Lucky Golf – R1,000 Hole-in-One Entry' },
 }
 
 // ---------------------------------------------------------------------------

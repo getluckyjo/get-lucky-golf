@@ -35,8 +35,8 @@ export async function POST(request: NextRequest) {
         course_id: courseId,
         hole_id: holeId,
         tier,
-        stake_pence: tierData.stakeGBP * 100,
-        potential_win_pence: tierData.winGBP * 100,
+        stake_pence: tierData.stakeZAR * 100,
+        potential_win_pence: tierData.winZAR * 100,
         payment_intent_id: paymentIntentId,
         status: 'active',
       })

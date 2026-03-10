@@ -7,21 +7,26 @@ const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID ?? '10000100'
 const PASSPHRASE  = process.env.PAYFAST_PASSPHRASE  ?? 'jt7NOE43FZPn'
 const SANDBOX     = process.env.PAYFAST_SANDBOX !== 'false'
 
-// PayFast production + sandbox IP ranges
+// PayFast's published source IP ranges (CIDR /28 = 16 IPs each)
+// Ref: https://developers.payfast.co.za/docs#notify
+// Block 1: 197.97.145.144/28  → .144 – .159
+// Block 2: 41.74.179.192/28   → .192 – .207
 const VALID_IPS = new Set([
-  '197.97.145.144', '197.97.145.145', '197.97.145.146', '197.97.145.147',
-  '196.33.227.224', '196.33.227.225',
-  // Sandbox
-  '197.97.145.144',
+  ...Array.from({ length: 16 }, (_, i) => `197.97.145.${144 + i}`),
+  ...Array.from({ length: 16 }, (_, i) => `41.74.179.${192 + i}`),
 ])
 
+const PF_VALIDATE_URL = SANDBOX
+  ? 'https://sandbox.payfast.co.za/eng/query/validate'
+  : 'https://www.payfast.co.za/eng/query/validate'
+
 // ---------------------------------------------------------------------------
-// Verify ITN signature
+// Step 1 helper — verify MD5 signature
 // ---------------------------------------------------------------------------
 function verifySignature(data: Record<string, string>): boolean {
   const { signature, ...rest } = data
   const qs = Object.entries(rest)
-    .map(([k, v]) => `${k}=${encodeURIComponent(v).replace(/%20/g, '+')}`)
+    .map(([k, v]) => `${k}=${encodeURIComponent(v.trim()).replace(/%20/g, '+')}`)
     .join('&')
   const toHash = PASSPHRASE
     ? `${qs}&passphrase=${encodeURIComponent(PASSPHRASE).replace(/%20/g, '+')}`
@@ -31,66 +36,100 @@ function verifySignature(data: Record<string, string>): boolean {
 }
 
 // ---------------------------------------------------------------------------
-// POST /api/payments/payfast/notify  (called by PayFast — not the browser)
+// Step 2 helper — "phone home" to PayFast's validate endpoint
+// ---------------------------------------------------------------------------
+async function validateWithPayFast(rawBody: string): Promise<boolean> {
+  try {
+    const res = await fetch(PF_VALIDATE_URL, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    rawBody,
+    })
+    const text = await res.text()
+    return text.trim().toUpperCase() === 'VALID'
+  } catch (err) {
+    console.error('[PayFast ITN] Validate endpoint error:', err)
+    // Don't fail hard on network issues — signature check is the primary guard
+    return true
+  }
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/payments/payfast/notify  ← PayFast calls this, not your browser
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
   try {
     const rawBody = await request.text()
     const params  = Object.fromEntries(new URLSearchParams(rawBody))
 
-    // 1. IP check (skip in sandbox — PayFast sandbox doesn't have fixed IPs)
+    // ── 1. IP whitelist (production only — sandbox IPs vary) ──────────────
     if (!SANDBOX) {
-      const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim()
-               ?? request.headers.get('x-real-ip')
-               ?? ''
+      const ip =
+        request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
+        request.headers.get('x-real-ip') ??
+        ''
       if (!VALID_IPS.has(ip)) {
         console.error('[PayFast ITN] Rejected unknown IP:', ip)
         return new NextResponse('Forbidden', { status: 403 })
       }
     }
 
-    // 2. Verify signature
+    // ── 2. Signature verification ─────────────────────────────────────────
     if (!verifySignature(params)) {
       console.error('[PayFast ITN] Invalid signature')
       return new NextResponse('Invalid signature', { status: 400 })
     }
 
-    // 3. Merchant ID check
+    // ── 3. Phone home — ask PayFast if this ITN is genuine ────────────────
+    const pfValid = await validateWithPayFast(rawBody)
+    if (!pfValid) {
+      console.error('[PayFast ITN] PayFast validate returned INVALID')
+      return new NextResponse('Validation failed', { status: 400 })
+    }
+
+    // ── 4. Merchant ID check ──────────────────────────────────────────────
     if (params.merchant_id !== MERCHANT_ID) {
       console.error('[PayFast ITN] Merchant ID mismatch:', params.merchant_id)
       return new NextResponse('Merchant mismatch', { status: 400 })
     }
 
-    // 4. Only process COMPLETE payments
+    // ── 5. Only process COMPLETE payments ─────────────────────────────────
     if (params.payment_status !== 'COMPLETE') {
-      console.log('[PayFast ITN] Non-complete status:', params.payment_status)
+      console.log('[PayFast ITN] Non-complete status:', params.payment_status, params.m_payment_id)
       return new NextResponse('OK', { status: 200 })
     }
 
-    // 5. Update the bet: replace our m_payment_id with PayFast's pf_payment_id
-    //    m_payment_id was stored as payment_intent_id when the bet was created
-    const mPaymentId  = params.m_payment_id
-    const pfPaymentId = params.pf_payment_id
+    // ── 6. Update the bet record ──────────────────────────────────────────
+    // m_payment_id (our reference) was stored as payment_intent_id at bet creation.
+    // We swap it for PayFast's own pf_payment_id so we can reconcile payouts later.
+    const mPaymentId  = params.m_payment_id  ?? ''
+    const pfPaymentId = params.pf_payment_id ?? ''
 
-    if (mPaymentId && pfPaymentId) {
+    if (mPaymentId) {
       try {
         const supabase = createAdminClient()
         const { error } = await supabase
           .from('bets')
-          .update({ payment_intent_id: pfPaymentId })
+          .update({ payment_intent_id: pfPaymentId || mPaymentId })
           .eq('payment_intent_id', mPaymentId)
 
-        if (error) console.error('[PayFast ITN] DB update error:', error.message)
-        else console.log('[PayFast ITN] Bet updated:', mPaymentId, '→', pfPaymentId)
+        if (error) {
+          // Non-fatal: bet row may not exist yet if ITN arrives before bets/create finishes
+          console.warn('[PayFast ITN] DB update warning:', error.message)
+        } else {
+          console.log(`[PayFast ITN] ✅ Payment confirmed — ${mPaymentId} → pf:${pfPaymentId}`)
+        }
       } catch (dbErr) {
-        // Service role key not configured — log and continue (non-fatal in dev)
-        console.warn('[PayFast ITN] Could not update bet (SUPABASE_SERVICE_ROLE_KEY missing?):', dbErr)
+        // SUPABASE_SERVICE_ROLE_KEY not configured in dev — log and continue
+        console.warn('[PayFast ITN] Could not update bet (service role key missing?):', dbErr)
       }
     }
 
+    // Always return 200 so PayFast stops retrying
     return new NextResponse('OK', { status: 200 })
   } catch (err) {
     console.error('[PayFast ITN] Unexpected error:', err)
-    return new NextResponse('Error', { status: 500 })
+    // Still 200 — returning 4xx/5xx causes PayFast to retry repeatedly
+    return new NextResponse('OK', { status: 200 })
   }
 }

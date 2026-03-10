@@ -120,7 +120,7 @@ export interface Database {
           user_id: string
           course_id: string
           hole_id: string
-          tier: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4'
+          tier: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4' | 'tier_5'
           stake_pence: number
           potential_win_pence: number
           status: 'active' | 'miss' | 'claimed' | 'verified' | 'paid'
@@ -135,7 +135,7 @@ export interface Database {
           user_id: string
           course_id: string
           hole_id: string
-          tier: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4'
+          tier: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4' | 'tier_5'
           stake_pence: number
           potential_win_pence: number
           status?: 'active' | 'miss' | 'claimed' | 'verified' | 'paid'

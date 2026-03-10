@@ -142,14 +142,14 @@ export default function ChooseStakePage() {
             >
               {tier.isPopular && <div className="bet-popular-tag">Most Popular</div>}
               <div className="bet-stake">
-                <div className="bet-stake-amount">£{tier.stakeGBP}</div>
+                <div className="bet-stake-amount">R{tier.stakeZAR.toLocaleString('en-ZA')}</div>
                 <div className="bet-stake-label">Stake</div>
               </div>
               <div className="bet-arrow">→</div>
               <div className="bet-multiplier">{tier.multiplier}×</div>
               <div className="bet-win">
                 <div className="bet-win-label">Win</div>
-                <div className="bet-win-amount">£{tier.winGBP.toLocaleString()}</div>
+                <div className="bet-win-amount">R{tier.winZAR.toLocaleString('en-ZA')}</div>
               </div>
             </div>
           ))}
@@ -168,7 +168,7 @@ export default function ChooseStakePage() {
           >
             {loading
               ? 'Opening payment...'
-              : `Confirm £${selectedTierData.stakeGBP} Entry →`}
+              : `Confirm R${selectedTierData.stakeZAR.toLocaleString('en-ZA')} Entry →`}
           </button>
           <div className="bet-disclaimer">🔒 Payments secured by PayFast · Fully insured</div>
         </div>

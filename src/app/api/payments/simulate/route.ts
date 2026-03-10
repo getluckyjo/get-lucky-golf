@@ -5,7 +5,7 @@ import type { NextRequest } from 'next/server'
 // Swap with real stripe.paymentIntents.create() when going live
 export async function POST(request: NextRequest) {
   try {
-    const { amount, currency = 'gbp', tier } = await request.json()
+    const { amount, currency = 'zar', tier } = await request.json()
 
     if (!amount || amount <= 0) {
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })

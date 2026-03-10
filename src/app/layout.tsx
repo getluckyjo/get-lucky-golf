@@ -4,18 +4,18 @@ import { AuthProvider } from '@/context/AuthContext'
 
 export const metadata: Metadata = {
   title: 'Get Lucky Golf — The Hole-in-One Challenge',
-  description: 'Stake £5–£50 to win up to £50,000. Record your hole-in-one on any par-3 and claim your prize.',
-  keywords: ['golf', 'hole-in-one', 'prize', 'betting', 'competition'],
+  description: 'Stake R50–R1,000 to win up to R1,000,000. Record your hole-in-one on any par-3 and claim your prize.',
+  keywords: ['golf', 'hole-in-one', 'prize', 'South Africa', 'ZAR', 'competition'],
   openGraph: {
     title: 'Get Lucky Golf',
-    description: 'One shot. £50,000. Back yourself on any par-3.',
+    description: 'One shot. R1,000,000. Back yourself on any par-3.',
     type: 'website',
-    locale: 'en_GB',
+    locale: 'en_ZA',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Get Lucky Golf',
-    description: 'One shot. £50,000. Back yourself on any par-3.',
+    description: 'One shot. R1,000,000. Back yourself on any par-3.',
   },
   appleWebApp: {
     capable: true,
@@ -38,7 +38,7 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en-ZA">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

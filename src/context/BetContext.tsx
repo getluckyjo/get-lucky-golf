@@ -18,22 +18,23 @@ export interface Hole {
   distanceMetres: number
 }
 
-export type BetTier = 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4'
+export type BetTier = 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4' | 'tier_5'
 
 export interface BetTierData {
   tier: BetTier
-  stakeGBP: number
-  winGBP: number
+  stakeZAR: number
+  winZAR: number
   multiplier: number
   label: string
   isPopular: boolean
 }
 
 export const BET_TIERS: BetTierData[] = [
-  { tier: 'tier_1', stakeGBP: 5,  winGBP: 2500,  multiplier: 500,  label: '£5 → £2,500',  isPopular: false },
-  { tier: 'tier_2', stakeGBP: 10, winGBP: 5000,  multiplier: 500,  label: '£10 → £5,000', isPopular: true  },
-  { tier: 'tier_3', stakeGBP: 20, winGBP: 20000, multiplier: 1000, label: '£20 → £20,000', isPopular: false },
-  { tier: 'tier_4', stakeGBP: 50, winGBP: 50000, multiplier: 1000, label: '£50 → £50,000', isPopular: false },
+  { tier: 'tier_1', stakeZAR: 50,   winZAR: 25000,   multiplier: 500,  label: 'R50 → R25,000',       isPopular: false },
+  { tier: 'tier_2', stakeZAR: 100,  winZAR: 60000,   multiplier: 600,  label: 'R100 → R60,000',      isPopular: true  },
+  { tier: 'tier_3', stakeZAR: 250,  winZAR: 200000,  multiplier: 800,  label: 'R250 → R200,000',     isPopular: false },
+  { tier: 'tier_4', stakeZAR: 500,  winZAR: 500000,  multiplier: 1000, label: 'R500 → R500,000',     isPopular: false },
+  { tier: 'tier_5', stakeZAR: 1000, winZAR: 1000000, multiplier: 1000, label: 'R1,000 → R1,000,000', isPopular: false },
 ]
 
 interface BetSession {

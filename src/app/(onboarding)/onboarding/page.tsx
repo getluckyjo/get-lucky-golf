@@ -9,7 +9,7 @@ const slides = [
     step: 'Step 1 of 3',
     emoji: '⛳',
     title: 'Bet on Yourself.\nWin Big.',
-    text: 'Stake as little as £5 on your hole-in-one shot. Land it, and walk away with up to £50,000. Every par-3 is your chance.',
+    text: 'Stake as little as R50 on your hole-in-one shot. Land it, and walk away with up to R1 million. Every par-3 is your chance.',
     cta: 'Next →',
   },
   {

@@ -44,17 +44,17 @@ function matchesFilter(bet: BetRecord, filter: Filter): boolean {
 }
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-GB', {
+  return new Date(iso).toLocaleDateString('en-ZA', {
     day: 'numeric', month: 'short', year: 'numeric',
   })
 }
 
-function formatStake(pence: number) {
-  return `£${pence / 100}`
+function formatStake(cents: number) {
+  return `R${(cents / 100).toLocaleString('en-ZA')}`
 }
 
-function formatWin(pence: number) {
-  return `£${(pence / 100).toLocaleString('en-GB')}`
+function formatWin(cents: number) {
+  return `R${(cents / 100).toLocaleString('en-ZA')}`
 }
 
 const PAGE_SIZE = 20
@@ -125,7 +125,7 @@ export default function HistoryPage() {
               </div>
               <div className="history-summary-card">
                 <div className="history-summary-val" style={{ color: claimCount > 0 ? 'var(--gold)' : undefined }}>
-                  {totalWon > 0 ? formatWin(totalWon) : claimCount > 0 ? `${claimCount} claim${claimCount > 1 ? 's' : ''}` : '£0'}
+                  {totalWon > 0 ? formatWin(totalWon) : claimCount > 0 ? `${claimCount} claim${claimCount > 1 ? 's' : ''}` : 'R0'}
                 </div>
                 <div className="history-summary-label">{totalWon > 0 ? 'Won' : 'Claims'}</div>
               </div>

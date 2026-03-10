@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
-import { useBet } from '@/context/BetContext'
+import { useBet, BET_TIERS } from '@/context/BetContext'
 import { useAuth } from '@/context/AuthContext'
 
 export default function TryAgainPage() {
@@ -41,10 +41,8 @@ export default function TryAgainPage() {
     router.push('/home')
   }
 
-  const stakeLabel = selectedTier === 'tier_1' ? '£5'
-    : selectedTier === 'tier_3' ? '£20'
-    : selectedTier === 'tier_4' ? '£50'
-    : '£10'
+  const tierData = BET_TIERS.find(t => t.tier === selectedTier) ?? BET_TIERS[1]
+  const stakeLabel = `R${tierData.stakeZAR.toLocaleString('en-ZA')}`
 
   const totalAttempts = profile?.total_attempts ?? 0
 

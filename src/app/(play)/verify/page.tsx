@@ -46,7 +46,7 @@ export default function VerifyPage() {
   const tierData = BET_TIERS.find(t => t.tier === selectedTier) ?? BET_TIERS[1]
   const payoutDate = new Date()
   payoutDate.setDate(payoutDate.getDate() + 7)
-  const payoutEta = payoutDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+  const payoutEta = payoutDate.toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
 
   // Simulated progression (fallback / demo)
   useEffect(() => {
@@ -109,7 +109,7 @@ export default function VerifyPage() {
         </div>
         <div className="verify-payout">
           <div className="verify-payout-label">Pending Prize</div>
-          <div className="verify-payout-amount">£{tierData.winGBP.toLocaleString()}</div>
+          <div className="verify-payout-amount">R{tierData.winZAR.toLocaleString('en-ZA')}</div>
           <div className="verify-payout-eta">Expected by {payoutEta}</div>
         </div>
         <div style={{ width: 'calc(100% - 48px)', paddingBottom: 20 }}>

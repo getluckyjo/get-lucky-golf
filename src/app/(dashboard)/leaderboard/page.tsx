@@ -18,25 +18,25 @@ interface Winner {
 }
 
 const BIGGEST_WINNERS: Winner[] = [
-  { rank: 1, initials: 'TM', name: 'Thabo M.', amount: 50000, course: 'Leopard Creek', stake: 50, date: '12 Feb' },
-  { rank: 2, initials: 'SR', name: 'Sarah R.', amount: 20000, course: 'Fancourt Estate', stake: 20, date: '28 Jan' },
-  { rank: 3, initials: 'JK', name: 'James K.', amount: 20000, course: 'Pearl Valley', stake: 20, date: '3 Feb' },
-  { rank: 4, initials: 'AN', name: 'Anika N.', amount: 5000, course: 'Boschenmeer GC', stake: 10, date: '9 Mar' },
-  { rank: 5, initials: 'PD', name: 'Pete D.', amount: 5000, course: 'Zimbali CC', stake: 10, date: '1 Mar' },
-  { rank: 6, initials: 'LS', name: 'Laura S.', amount: 2500, course: 'Atlantic Beach', stake: 5, date: '7 Mar' },
-  { rank: 7, initials: 'MO', name: 'Mike O.', amount: 2500, course: 'Erinvale GC', stake: 5, date: '5 Mar' },
-  { rank: 8, initials: 'CB', name: 'Chloe B.', amount: 2500, course: 'Steenberg GC', stake: 5, date: '2 Mar' },
+  { rank: 1, initials: 'TM', name: 'Thabo M.', amount: 500000, course: 'Leopard Creek', stake: 500, date: '12 Feb' },
+  { rank: 2, initials: 'SR', name: 'Sarah R.', amount: 200000, course: 'Fancourt Estate', stake: 250, date: '28 Jan' },
+  { rank: 3, initials: 'JK', name: 'James K.', amount: 200000, course: 'Pearl Valley', stake: 250, date: '3 Feb' },
+  { rank: 4, initials: 'AN', name: 'Anika N.', amount: 60000, course: 'Boschenmeer GC', stake: 100, date: '9 Mar' },
+  { rank: 5, initials: 'PD', name: 'Pete D.', amount: 60000, course: 'Zimbali CC', stake: 100, date: '1 Mar' },
+  { rank: 6, initials: 'LS', name: 'Laura S.', amount: 25000, course: 'Atlantic Beach', stake: 50, date: '7 Mar' },
+  { rank: 7, initials: 'MO', name: 'Mike O.', amount: 25000, course: 'Erinvale GC', stake: 50, date: '5 Mar' },
+  { rank: 8, initials: 'CB', name: 'Chloe B.', amount: 25000, course: 'Steenberg GC', stake: 50, date: '2 Mar' },
 ]
 
 const RECENT_WINNERS: Winner[] = [
-  { rank: 1, initials: 'AN', name: 'Anika N.', amount: 5000, course: 'Boschenmeer GC', stake: 10, date: 'Today' },
-  { rank: 2, initials: 'LS', name: 'Laura S.', amount: 2500, course: 'Atlantic Beach', stake: 5, date: 'Yesterday' },
-  { rank: 3, initials: 'MO', name: 'Mike O.', amount: 2500, course: 'Erinvale GC', stake: 5, date: '2 days ago' },
-  { rank: 4, initials: 'PD', name: 'Pete D.', amount: 5000, course: 'Zimbali CC', stake: 10, date: '7 days ago' },
-  { rank: 5, initials: 'CB', name: 'Chloe B.', amount: 2500, course: 'Steenberg GC', stake: 5, date: '8 days ago' },
-  { rank: 6, initials: 'JK', name: 'James K.', amount: 20000, course: 'Pearl Valley', stake: 20, date: '35 days ago' },
-  { rank: 7, initials: 'SR', name: 'Sarah R.', amount: 20000, course: 'Fancourt Estate', stake: 20, date: '40 days ago' },
-  { rank: 8, initials: 'TM', name: 'Thabo M.', amount: 50000, course: 'Leopard Creek', stake: 50, date: '56 days ago' },
+  { rank: 1, initials: 'AN', name: 'Anika N.', amount: 60000, course: 'Boschenmeer GC', stake: 100, date: 'Today' },
+  { rank: 2, initials: 'LS', name: 'Laura S.', amount: 25000, course: 'Atlantic Beach', stake: 50, date: 'Yesterday' },
+  { rank: 3, initials: 'MO', name: 'Mike O.', amount: 25000, course: 'Erinvale GC', stake: 50, date: '2 days ago' },
+  { rank: 4, initials: 'PD', name: 'Pete D.', amount: 60000, course: 'Zimbali CC', stake: 100, date: '7 days ago' },
+  { rank: 5, initials: 'CB', name: 'Chloe B.', amount: 25000, course: 'Steenberg GC', stake: 50, date: '8 days ago' },
+  { rank: 6, initials: 'JK', name: 'James K.', amount: 200000, course: 'Pearl Valley', stake: 250, date: '35 days ago' },
+  { rank: 7, initials: 'SR', name: 'Sarah R.', amount: 200000, course: 'Fancourt Estate', stake: 250, date: '40 days ago' },
+  { rank: 8, initials: 'TM', name: 'Thabo M.', amount: 500000, course: 'Leopard Creek', stake: 500, date: '56 days ago' },
 ]
 
 function getInitials(name: string | null | undefined, email: string | null | undefined) {
@@ -46,7 +46,7 @@ function getInitials(name: string | null | undefined, email: string | null | und
 }
 
 function formatWin(amount: number) {
-  return `£${amount.toLocaleString('en-GB')}`
+  return `R${amount.toLocaleString('en-ZA')}`
 }
 
 export default function LeaderboardPage() {
@@ -71,7 +71,7 @@ export default function LeaderboardPage() {
         <div className="leaderboard-header">
           <div className="leaderboard-title">🏆 Winners</div>
           <div className="leaderboard-subtitle">
-            £{totalPaidOut.toLocaleString('en-GB')} paid out to date
+            R{totalPaidOut.toLocaleString('en-ZA')} paid out to date
           </div>
         </div>
 
