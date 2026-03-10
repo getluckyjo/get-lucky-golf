@@ -7,10 +7,10 @@ import { useAuth } from '@/context/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 
 const methods = [
-  { id: 'apple_pay', icon: '🍎', name: 'Apple Pay', desc: 'Fastest checkout at the tee' },
-  { id: 'google_pay', icon: '🅶', name: 'Google Pay', desc: 'Quick tap-and-go' },
-  { id: 'card', icon: '💳', name: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex' },
-  { id: 'eft', icon: '🏦', name: 'EFT / Bank Transfer', desc: 'Direct bank payment' },
+  { id: 'card',       icon: '💳', name: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex'     },
+  { id: 'eft',        icon: '🏦', name: 'Instant EFT',         desc: 'Direct from your bank'       },
+  { id: 'apple_pay',  icon: '🍎', name: 'Apple Pay',            desc: 'Fastest checkout at the tee' },
+  { id: 'google_pay', icon: '🅶', name: 'Google Pay',           desc: 'Quick tap-and-go'            },
 ]
 
 export default function PaymentSetupPage() {
@@ -51,8 +51,6 @@ export default function PaymentSetupPage() {
     router.push('/home')
   }
 
-  const displayName = user?.user_metadata?.full_name ?? user?.email?.split('@')[0]?.toUpperCase() ?? 'YOUR NAME'
-
   return (
     <PhoneFrame statusTheme="dark">
       <div className="screen-payment">
@@ -61,18 +59,34 @@ export default function PaymentSetupPage() {
         </div>
         <div className="signup-title-area" style={{ padding: '16px 24px' }}>
           <h3 className="signup-title">Payment Setup</h3>
-          <p className="signup-sub">Save once, enter instantly every round</p>
+          <p className="signup-sub">Choose how you'll pay when you play</p>
         </div>
-        <div className="payment-card-preview">
-          <div className="card-type">Get Lucky Wallet</div>
-          <div className="card-number">•••• •••• •••• 4829</div>
-          <div className="card-bottom">
-            <span>{displayName}</span>
-            <span>VISA</span>
+
+        {/* PayFast trust badge */}
+        <div style={{
+          margin: '0 24px 20px',
+          background: 'rgba(26, 61, 46, 0.07)',
+          borderRadius: 14,
+          padding: '14px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12,
+          border: '1px solid rgba(26, 61, 46, 0.12)',
+        }}>
+          <div style={{ fontSize: 26 }}>🔒</div>
+          <div>
+            <div style={{ color: '#1a3d2e', fontWeight: 700, fontSize: 13 }}>
+              Powered by PayFast
+            </div>
+            <div style={{ color: '#5a7a6a', fontSize: 11, marginTop: 2, lineHeight: 1.4 }}>
+              SA&apos;s most trusted payment gateway. Your card details are
+              never stored by Get Lucky.
+            </div>
           </div>
         </div>
+
         <div className="payment-methods">
-          <div className="payment-methods-title">Payment Method</div>
+          <div className="payment-methods-title">Preferred Payment Method</div>
           {methods.map(m => (
             <div
               key={m.id}
@@ -88,7 +102,7 @@ export default function PaymentSetupPage() {
             </div>
           ))}
         </div>
-        <div className="payment-secure">🔒 256-bit SSL encrypted</div>
+        <div className="payment-secure">🔒 256-bit SSL · Secured by PayFast</div>
         <div style={{ padding: '0 24px 40px' }}>
           <button
             className="btn-primary"
