@@ -64,6 +64,8 @@ export async function POST(request: NextRequest) {
 
     // ── 1. IP whitelist (production only — sandbox IPs vary) ──────────────
     if (!SANDBOX) {
+      // x-forwarded-for format: "client, proxy1, proxy2"
+      // The leftmost IP is the original requester (PayFast in this case)
       const ip =
         request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
         request.headers.get('x-real-ip') ??
@@ -93,34 +95,46 @@ export async function POST(request: NextRequest) {
       return new NextResponse('Merchant mismatch', { status: 400 })
     }
 
-    // ── 5. Only process COMPLETE payments ─────────────────────────────────
+    // ── 5. Log all payment statuses for visibility ─────────────────────────
+    console.log(
+      `[PayFast ITN] Status: ${params.payment_status} | m_payment_id: ${params.m_payment_id} | pf_payment_id: ${params.pf_payment_id} | amount: ${params.amount_gross}`,
+    )
+
+    // Only process COMPLETE payments for DB updates
     if (params.payment_status !== 'COMPLETE') {
-      console.log('[PayFast ITN] Non-complete status:', params.payment_status, params.m_payment_id)
       return new NextResponse('OK', { status: 200 })
     }
 
     // ── 6. Update the bet record ──────────────────────────────────────────
     // m_payment_id (our reference) was stored as payment_intent_id at bet creation.
     // We swap it for PayFast's own pf_payment_id so we can reconcile payouts later.
+    // We also explicitly set status = 'active' as a belt-and-suspenders confirmation.
     const mPaymentId  = params.m_payment_id  ?? ''
     const pfPaymentId = params.pf_payment_id ?? ''
 
     if (mPaymentId) {
       try {
         const supabase = createAdminClient()
-        const { error } = await supabase
+
+        const { error, count } = await supabase
           .from('bets')
-          .update({ payment_intent_id: pfPaymentId || mPaymentId })
+          .update({
+            payment_intent_id: pfPaymentId || mPaymentId,
+            status:            'active',   // re-confirm payment is good
+          })
           .eq('payment_intent_id', mPaymentId)
+          .select('id', { count: 'exact', head: true })
 
         if (error) {
           // Non-fatal: bet row may not exist yet if ITN arrives before bets/create finishes
           console.warn('[PayFast ITN] DB update warning:', error.message)
         } else {
-          console.log(`[PayFast ITN] ✅ Payment confirmed — ${mPaymentId} → pf:${pfPaymentId}`)
+          console.log(
+            `[PayFast ITN] ✅ Payment confirmed — ${mPaymentId} → pf:${pfPaymentId} (${count ?? 0} row(s) updated)`,
+          )
         }
       } catch (dbErr) {
-        // SUPABASE_SERVICE_ROLE_KEY not configured in dev — log and continue
+        // SUPABASE_SERVICE_ROLE_KEY not configured — log and continue
         console.warn('[PayFast ITN] Could not update bet (service role key missing?):', dbErr)
       }
     }

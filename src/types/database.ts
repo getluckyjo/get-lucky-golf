@@ -20,6 +20,9 @@ export interface Database {
           onboarding_done: boolean
           payment_setup_done: boolean
           total_attempts: number
+          is_admin: boolean
+          suspended_at: string | null
+          suspended_reason: string | null
           created_at: string
         }
         Insert: {
@@ -32,6 +35,9 @@ export interface Database {
           onboarding_done?: boolean
           payment_setup_done?: boolean
           total_attempts?: number
+          is_admin?: boolean
+          suspended_at?: string | null
+          suspended_reason?: string | null
           created_at?: string
         }
         Update: {
@@ -44,6 +50,9 @@ export interface Database {
           onboarding_done?: boolean
           payment_setup_done?: boolean
           total_attempts?: number
+          is_admin?: boolean
+          suspended_at?: string | null
+          suspended_reason?: string | null
           created_at?: string
         }
       }
@@ -150,7 +159,7 @@ export interface Database {
           user_id?: string
           course_id?: string
           hole_id?: string
-          tier?: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4'
+          tier?: 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4' | 'tier_5'
           stake_pence?: number
           potential_win_pence?: number
           status?: 'active' | 'miss' | 'claimed' | 'verified' | 'paid'
@@ -172,6 +181,8 @@ export interface Database {
           documents_received_at: string | null
           verified_at: string | null
           payout_initiated_at: string | null
+          reviewer_notes: string | null
+          reviewed_by: string | null
           created_at: string
         }
         Insert: {
@@ -184,6 +195,8 @@ export interface Database {
           documents_received_at?: string | null
           verified_at?: string | null
           payout_initiated_at?: string | null
+          reviewer_notes?: string | null
+          reviewed_by?: string | null
           created_at?: string
         }
         Update: {
@@ -196,6 +209,8 @@ export interface Database {
           documents_received_at?: string | null
           verified_at?: string | null
           payout_initiated_at?: string | null
+          reviewer_notes?: string | null
+          reviewed_by?: string | null
           created_at?: string
         }
       }

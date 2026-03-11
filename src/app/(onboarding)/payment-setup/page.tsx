@@ -10,7 +10,7 @@ const methods = [
   { id: 'card',       icon: '💳', name: 'Credit / Debit Card', desc: 'Visa, Mastercard, Amex'     },
   { id: 'eft',        icon: '🏦', name: 'Instant EFT',         desc: 'Direct from your bank'       },
   { id: 'apple_pay',  icon: '🍎', name: 'Apple Pay',            desc: 'Fastest checkout at the tee' },
-  { id: 'google_pay', icon: '🅶', name: 'Google Pay',           desc: 'Quick tap-and-go'            },
+  { id: 'google_pay', icon: 'G',  name: 'Google Pay',           desc: 'Quick tap-and-go'            },
 ]
 
 export default function PaymentSetupPage() {
@@ -57,7 +57,10 @@ export default function PaymentSetupPage() {
         <div className="signup-header" style={{ padding: '20px 24px 0' }}>
           <button className="back-btn" onClick={() => router.back()}>←</button>
         </div>
-        <div className="signup-title-area" style={{ padding: '16px 24px' }}>
+        <div style={{ textAlign: 'center', padding: '10px 24px 0' }}>
+          <img src="/logo.svg" alt="Get Lucky Golf Club" className="logo-header-dark" style={{ width: 120 }} />
+        </div>
+        <div className="signup-title-area" style={{ padding: '12px 24px 12px' }}>
           <h3 className="signup-title">Payment Setup</h3>
           <p className="signup-sub">Choose how you'll pay when you play</p>
         </div>

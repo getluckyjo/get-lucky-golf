@@ -21,14 +21,32 @@ const PF_SCRIPT = SANDBOX
   ? 'https://sandbox.payfast.co.za/onsite/engine.js'
   : 'https://www.payfast.co.za/onsite/engine.js'
 
+type LoadingStep = 'idle' | 'opening' | 'confirming' | 'creating'
+
+const LOADING_LABELS: Record<LoadingStep, string> = {
+  idle:       '',
+  opening:    'Opening payment...',
+  confirming: 'Confirming payment...',
+  creating:   'Setting up your bet...',
+}
+
 export default function ChooseStakePage() {
   const router = useRouter()
   const { selectedCourse, selectedHole, selectTier, confirmPayment, setBetId } = useBet()
   const { user, profile } = useAuth()
-  const [selected, setSelected]   = useState<BetTier>('tier_2')
-  const [loading, setLoading]     = useState(false)
-  const [errorMsg, setErrorMsg]   = useState('')
-  const [pfReady, setPfReady]     = useState(false)
+  const [selected, setSelected]     = useState<BetTier>('tier_2')
+  const [step, setStep]             = useState<LoadingStep>('idle')
+  const [errorMsg, setErrorMsg]     = useState('')
+  const [pfReady, setPfReady]       = useState(false)
+
+  const loading = step !== 'idle'
+
+  // Guard: if no course selected, send back to select-course
+  useEffect(() => {
+    if (!selectedCourse || !selectedHole) {
+      router.replace('/select-course')
+    }
+  }, [selectedCourse, selectedHole, router])
 
   // Load PayFast Onsite engine once on mount
   useEffect(() => {
@@ -36,12 +54,12 @@ export default function ChooseStakePage() {
       setPfReady(true)
       return
     }
-    const script = document.createElement('script')
-    script.id    = 'payfast-onsite-script'
-    script.src   = PF_SCRIPT
-    script.async = true
-    script.onload = () => setPfReady(true)
-    script.onerror = () => console.warn('[PayFast] Failed to load Onsite engine')
+    const script     = document.createElement('script')
+    script.id        = 'payfast-onsite-script'
+    script.src       = PF_SCRIPT
+    script.async     = true
+    script.onload    = () => setPfReady(true)
+    script.onerror   = () => console.warn('[PayFast] Failed to load Onsite engine')
     document.head.appendChild(script)
   }, [])
 
@@ -51,12 +69,12 @@ export default function ChooseStakePage() {
     : 'Select your stake to play'
 
   async function handleConfirm() {
-    setLoading(true)
+    setStep('opening')
     setErrorMsg('')
     selectTier(selected)
 
     try {
-      // 1. Get PayFast Onsite UUID from our server
+      // ── 1. Get PayFast Onsite UUID from our server ──────────────────────────
       const pfRes = await fetch('/api/payments/payfast', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,27 +90,36 @@ export default function ChooseStakePage() {
         throw new Error(pfData.error ?? 'Failed to initialise payment')
       }
 
-      // 2. Open PayFast Onsite modal and wait for result
+      // ── 2. Open PayFast Onsite modal ────────────────────────────────────────
       const paymentResult = await new Promise<boolean>((resolve) => {
         if (typeof window.payfast_do_onsite_payment === 'function') {
           window.payfast_do_onsite_payment({ uuid: pfData.uuid }, resolve)
         } else {
-          // PayFast JS didn't load (e.g. network issue) — resolve true in dev only
-          console.warn('[PayFast] Onsite engine not loaded; skipping modal in development')
-          resolve(true)
+          // PayFast JS didn't load — only bypass in non-production
+          if (SANDBOX) {
+            console.warn('[PayFast] Onsite engine not loaded; bypassing in sandbox/dev')
+            resolve(true)
+          } else {
+            console.error('[PayFast] Onsite engine failed to load in production')
+            resolve(false)
+          }
         }
       })
 
       if (!paymentResult) {
         setErrorMsg('Payment was cancelled.')
-        setLoading(false)
+        setStep('idle')
         return
       }
 
-      // 3. Store payment reference in context
+      setStep('confirming')
+
+      // ── 3. Store payment reference in context ───────────────────────────────
       confirmPayment(pfData.m_payment_id)
 
-      // 4. Create the bet record in DB
+      setStep('creating')
+
+      // ── 4. Create the bet record in DB ──────────────────────────────────────
       const betRes = await fetch('/api/bets/create', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -103,15 +130,23 @@ export default function ChooseStakePage() {
           paymentIntentId: pfData.m_payment_id,
         }),
       })
-      const bet = await betRes.json()
-      setBetId(bet.betId ?? `bet_fallback_${Date.now()}`)
 
-      setLoading(false)
+      if (!betRes.ok) {
+        const betErr = await betRes.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('[bets/create] Failed:', betErr)
+        throw new Error(betErr.error ?? 'Could not register your bet. Please contact support.')
+      }
+
+      const bet = await betRes.json()
+      setBetId(bet.betId)
+
+      setStep('idle')
       router.push('/record')
-    } catch (err) {
+    } catch (err: unknown) {
       console.error('[PayFast] handleConfirm error:', err)
-      setErrorMsg('Something went wrong. Please try again.')
-      setLoading(false)
+      const msg = err instanceof Error ? err.message : 'Something went wrong. Please try again.'
+      setErrorMsg(msg)
+      setStep('idle')
     }
   }
 
@@ -120,10 +155,12 @@ export default function ChooseStakePage() {
       <div className="screen-bet">
         <div style={{ position: 'absolute', top: 60, left: 24, zIndex: 10 }}>
           <button
-            onClick={() => router.back()}
+            onClick={() => !loading && router.back()}
+            disabled={loading}
             style={{
               width: 36, height: 36, background: 'rgba(255,255,255,0.1)',
-              border: 'none', borderRadius: 10, color: 'white', fontSize: 18, cursor: 'pointer',
+              border: 'none', borderRadius: 10, color: 'white', fontSize: 18,
+              cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.5 : 1,
             }}
           >
             ←
@@ -138,7 +175,8 @@ export default function ChooseStakePage() {
             <div
               key={tier.tier}
               className={`bet-card${selected === tier.tier ? ' selected' : ''}${tier.isPopular ? ' popular' : ''}`}
-              onClick={() => setSelected(tier.tier)}
+              onClick={() => !loading && setSelected(tier.tier)}
+              style={{ opacity: loading ? 0.6 : 1, pointerEvents: loading ? 'none' : 'auto' }}
             >
               {tier.isPopular && <div className="bet-popular-tag">Most Popular</div>}
               <div className="bet-stake">
@@ -163,12 +201,14 @@ export default function ChooseStakePage() {
           <button
             className="btn-gold"
             onClick={handleConfirm}
-            disabled={loading}
-            style={{ opacity: loading ? 0.8 : 1, position: 'relative' }}
+            disabled={loading || !pfReady}
+            style={{ opacity: (loading || !pfReady) ? 0.8 : 1, position: 'relative' }}
           >
             {loading
-              ? 'Opening payment...'
-              : `Confirm R${selectedTierData.stakeZAR.toLocaleString('en-ZA')} Entry →`}
+              ? LOADING_LABELS[step]
+              : !pfReady
+                ? 'Loading...'
+                : `Confirm R${selectedTierData.stakeZAR.toLocaleString('en-ZA')} Entry →`}
           </button>
           <div className="bet-disclaimer">🔒 Payments secured by PayFast · Fully insured</div>
         </div>

@@ -213,8 +213,44 @@ export default function RecordPage() {
           <div className="record-course-name">{courseName}</div>
         </div>
 
+        {/* Tap-to-record hint — shown only when idle and ready */}
+        {!isRecording && !uploading && cameraReady && (
+          <div style={{
+            position: 'absolute', bottom: 138, left: 0, right: 0,
+            textAlign: 'center', zIndex: 10,
+          }}>
+            <div style={{
+              display: 'inline-block',
+              background: 'rgba(0,0,0,0.45)',
+              color: 'rgba(255,255,255,0.9)',
+              fontSize: 13, fontWeight: 600,
+              padding: '6px 18px', borderRadius: 20,
+              letterSpacing: '0.02em',
+            }}>
+              Tap ● to start recording
+            </div>
+          </div>
+        )}
+
+        {/* Uploading label */}
+        {uploading && (
+          <div style={{
+            position: 'absolute', bottom: 138, left: 0, right: 0,
+            textAlign: 'center', zIndex: 10,
+          }}>
+            <div style={{
+              display: 'inline-block',
+              background: 'rgba(0,0,0,0.55)',
+              color: 'rgba(255,255,255,0.9)',
+              fontSize: 13, fontWeight: 600,
+              padding: '6px 18px', borderRadius: 20,
+            }}>
+              Uploading…
+            </div>
+          </div>
+        )}
+
         <div className="record-controls">
-          <button className="record-btn-secondary" style={{ opacity: 0.4 }}>🔄</button>
           <button
             className={`record-btn-main${isRecording ? ' recording' : ''}`}
             onClick={isRecording ? stopRecording : startRecording}
@@ -230,7 +266,6 @@ export default function RecordPage() {
               <div className="record-btn-main-inner" />
             )}
           </button>
-          <button className="record-btn-secondary" style={{ opacity: 0.4 }}>📸</button>
         </div>
       </div>
     </PhoneFrame>

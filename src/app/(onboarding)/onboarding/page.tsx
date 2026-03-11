@@ -49,14 +49,22 @@ export default function OnboardingPage() {
   const slide = slides[current]
 
   return (
-    <PhoneFrame statusTheme="dark">
+    <PhoneFrame statusTheme="light">
       <div className="screen-onboard">
         <div className="onboard-hero">
-          <div className="onboard-illustration">{slide.emoji}</div>
+          {current === 0 ? (
+            <img
+              src="/logo.svg"
+              alt="Get Lucky Golf Club"
+              style={{ width: 200, height: 'auto', zIndex: 1, filter: 'brightness(0) invert(1)', opacity: 0.95 }}
+            />
+          ) : (
+            <div className="onboard-illustration">{slide.emoji}</div>
+          )}
           <div
             style={{
               position: 'absolute',
-              top: 16,
+              top: 56,
               right: 20,
               zIndex: 10,
             }}

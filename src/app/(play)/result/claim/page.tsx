@@ -16,7 +16,7 @@ interface UploadStep {
 
 export default function ClaimPage() {
   const router = useRouter()
-  const { betId } = useBet()
+  const { betId, resetSession } = useBet()
   const [steps, setSteps] = useState<UploadStep[]>([
     { id: 'video', title: 'Shot Video', desc: 'Your recording has been uploaded', done: true },
     { id: 'certificate', title: 'Course Certificate', desc: 'Official hole-in-one certificate from the club', done: false },
@@ -130,6 +130,24 @@ export default function ClaimPage() {
           >
             {loading ? 'Submitting...' : 'Submit Claim →'}
           </button>
+
+          {/* Escape hatch — user can return to home and submit docs later */}
+          <button
+            onClick={() => { resetSession(); router.push('/home') }}
+            style={{
+              background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
+              fontSize: 13, marginTop: 12, cursor: 'pointer', padding: '8px 0',
+              textDecoration: 'underline', textUnderlineOffset: 3,
+            }}
+          >
+            I&apos;ll upload documents later
+          </button>
+          <div style={{
+            fontSize: 11, color: 'rgba(255,255,255,0.35)',
+            marginTop: 4, textAlign: 'center',
+          }}>
+            You have 7 days to submit from the date of your shot
+          </div>
         </div>
       </div>
     </PhoneFrame>

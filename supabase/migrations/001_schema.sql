@@ -1,10 +1,10 @@
 -- ================================================================
--- Get Lucky Golf — Database Schema
+-- Get Lucky Golf — Complete Database Schema
 -- Run this in your Supabase project: SQL Editor → New query → Run
 -- ================================================================
 
 -- ----------------------------------------------------------------
--- PROFILES (extends auth.users)
+-- 1. PROFILES (extends auth.users)
 -- ----------------------------------------------------------------
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
@@ -16,6 +16,9 @@ create table if not exists public.profiles (
   onboarding_done boolean not null default false,
   payment_setup_done boolean not null default false,
   total_attempts integer not null default 0,
+  is_admin boolean not null default false,
+  suspended_at timestamptz,
+  suspended_reason text,
   created_at timestamptz not null default now()
 );
 
@@ -48,8 +51,21 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
 
+-- Atomically increment total_attempts (called fire-and-forget from bet creation)
+create or replace function public.increment_attempts(user_id uuid)
+returns void
+language plpgsql
+security definer set search_path = public
+as $$
+begin
+  update public.profiles
+  set total_attempts = total_attempts + 1
+  where id = user_id;
+end;
+$$;
+
 -- ----------------------------------------------------------------
--- COURSES
+-- 2. COURSES
 -- ----------------------------------------------------------------
 create table if not exists public.courses (
   id uuid primary key default gen_random_uuid(),
@@ -69,7 +85,7 @@ create policy "Courses are publicly readable"
   on public.courses for select using (true);
 
 -- ----------------------------------------------------------------
--- HOLES (par-3 holes per course)
+-- 3. HOLES (par-3 holes per course)
 -- ----------------------------------------------------------------
 create table if not exists public.holes (
   id uuid primary key default gen_random_uuid(),
@@ -89,12 +105,10 @@ create policy "Holes are publicly readable"
   on public.holes for select using (true);
 
 -- ----------------------------------------------------------------
--- BETS
+-- 4. ENUMS
 -- ----------------------------------------------------------------
--- Note: CREATE TYPE IF NOT EXISTS isn't supported for enums in older PG versions.
--- Use DO $$ BEGIN ... EXCEPTION WHEN duplicate_object THEN null; END $$ instead.
 do $$ begin
-  create type bet_tier as enum ('tier_1', 'tier_2', 'tier_3', 'tier_4');
+  create type bet_tier as enum ('tier_1', 'tier_2', 'tier_3', 'tier_4', 'tier_5');
 exception when duplicate_object then null;
 end $$;
 
@@ -103,6 +117,16 @@ do $$ begin
 exception when duplicate_object then null;
 end $$;
 
+do $$ begin
+  create type verification_status as enum (
+    'pending', 'documents_received', 'under_review', 'approved', 'rejected'
+  );
+exception when duplicate_object then null;
+end $$;
+
+-- ----------------------------------------------------------------
+-- 5. BETS
+-- ----------------------------------------------------------------
 create table if not exists public.bets (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users on delete cascade,
@@ -121,21 +145,23 @@ create table if not exists public.bets (
 
 alter table public.bets enable row level security;
 
-create policy "Users can view and create their own bets"
-  on public.bets for all
+-- Granular policies (no DELETE — users cannot delete bets)
+create policy "Users can view their own bets"
+  on public.bets for select
+  using (auth.uid() = user_id);
+
+create policy "Users can create bets"
+  on public.bets for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own bets"
+  on public.bets for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------
--- VERIFICATIONS
+-- 6. VERIFICATIONS
 -- ----------------------------------------------------------------
-do $$ begin
-  create type verification_status as enum (
-    'pending', 'documents_received', 'under_review', 'approved', 'rejected'
-  );
-exception when duplicate_object then null;
-end $$;
-
 create table if not exists public.verifications (
   id uuid primary key default gen_random_uuid(),
   bet_id uuid not null unique references public.bets on delete cascade,
@@ -146,6 +172,8 @@ create table if not exists public.verifications (
   documents_received_at timestamptz,
   verified_at timestamptz,
   payout_initiated_at timestamptz,
+  reviewer_notes text,
+  reviewed_by uuid references auth.users,
   created_at timestamptz not null default now()
 );
 
@@ -161,8 +189,94 @@ create policy "Users can view verifications for their own bets"
     )
   );
 
+create policy "Users can create verifications for their own bets"
+  on public.verifications for insert
+  with check (
+    exists (
+      select 1 from public.bets
+      where bets.id = verifications.bet_id
+      and bets.user_id = auth.uid()
+    )
+  );
+
+create policy "Users can update verifications for their own bets"
+  on public.verifications for update
+  using (
+    exists (
+      select 1 from public.bets
+      where bets.id = verifications.bet_id
+      and bets.user_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.bets
+      where bets.id = verifications.bet_id
+      and bets.user_id = auth.uid()
+    )
+  );
+
 -- ----------------------------------------------------------------
--- SEED: Sample South African golf courses + par-3 holes
+-- 7. PERFORMANCE INDEXES
+-- ----------------------------------------------------------------
+create index if not exists idx_bets_user_id on public.bets (user_id);
+create index if not exists idx_bets_status on public.bets (status);
+create index if not exists idx_bets_course_id on public.bets (course_id);
+create index if not exists idx_verifications_status on public.verifications (status);
+
+-- ----------------------------------------------------------------
+-- 8. STORAGE BUCKETS
+-- ----------------------------------------------------------------
+
+-- shot-videos: user-uploaded hole-in-one recordings
+insert into storage.buckets (id, name, public)
+values ('shot-videos', 'shot-videos', false)
+on conflict (id) do nothing;
+
+-- verification-docs: certificates and affidavits
+insert into storage.buckets (id, name, public)
+values ('verification-docs', 'verification-docs', false)
+on conflict (id) do nothing;
+
+-- Storage policies: shot-videos
+create policy "Users can upload shot videos"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'shot-videos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+create policy "Users can view own shot videos"
+  on storage.objects for select
+  using (
+    bucket_id = 'shot-videos'
+    and (storage.foldername(name))[1] = auth.uid()::text
+  );
+
+-- Storage policies: verification-docs (authenticated users)
+create policy "Users can upload verification docs"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'verification-docs'
+    and auth.role() = 'authenticated'
+  );
+
+create policy "Users can update verification docs"
+  on storage.objects for update
+  using (
+    bucket_id = 'verification-docs'
+    and auth.role() = 'authenticated'
+  );
+
+create policy "Users can view verification docs"
+  on storage.objects for select
+  using (
+    bucket_id = 'verification-docs'
+    and auth.role() = 'authenticated'
+  );
+
+-- ----------------------------------------------------------------
+-- 9. SEED DATA: South African golf courses + par-3 holes
 -- ----------------------------------------------------------------
 insert into public.courses (id, name, location_text, region, country, lat, lng, is_partner) values
   ('11111111-0000-0000-0000-000000000001', 'Boschenmeer Golf Club', 'Paarl, Western Cape', 'Western Cape', 'South Africa', -33.7248, 18.9556, true),

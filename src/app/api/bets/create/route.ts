@@ -20,42 +20,36 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    // If no authenticated user, return a mock bet ID
     if (!user) {
-      return NextResponse.json({
-        betId: `bet_mock_${Date.now()}`,
-        source: 'mock',
-      })
+      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
     }
 
     const { data: bet, error } = await supabase
       .from('bets')
       .insert({
-        user_id: user.id,
-        course_id: courseId,
-        hole_id: holeId,
+        user_id:             user.id,
+        course_id:           courseId,
+        hole_id:             holeId,
         tier,
-        stake_pence: tierData.stakeZAR * 100,
-        potential_win_pence: tierData.winZAR * 100,
-        payment_intent_id: paymentIntentId,
-        status: 'active',
+        stake_pence:         tierData.stakeZAR * 100,
+        potential_win_pence: tierData.winZAR   * 100,
+        payment_intent_id:   paymentIntentId,
+        status:              'active',
       })
       .select('id')
       .single()
 
     if (error) {
-      // Log error but return mock ID so the flow continues
-      console.error('Bet creation error:', error.message)
-      return NextResponse.json({
-        betId: `bet_mock_${Date.now()}`,
-        source: 'mock_on_error',
-      })
+      console.error('[bets/create] DB insert failed:', error.message)
+      return NextResponse.json(
+        { error: 'Failed to create bet', detail: error.message },
+        { status: 500 },
+      )
     }
 
-    // Increment total_attempts on profile
-    await supabase.rpc('increment_attempts', { user_id: user.id }).catch(() => {
-      // Non-critical — ignore if RPC doesn't exist yet
-    })
+    // Increment total_attempts on profile — best-effort, fire-and-forget.
+    // Uses an RPC that may not exist in the DB yet; safe to ignore failures.
+    supabase.rpc('increment_attempts', { user_id: user.id }).catch(() => {})
 
     return NextResponse.json({ betId: bet.id, source: 'database' })
   } catch {

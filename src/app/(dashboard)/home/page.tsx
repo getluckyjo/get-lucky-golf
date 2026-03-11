@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
+import BottomTabBar from '@/components/layout/BottomTabBar'
 import { useAuth } from '@/context/AuthContext'
 import { createClient } from '@/lib/supabase/client'
 
@@ -268,24 +269,7 @@ export default function HomePage() {
       </div>
 
       {/* Bottom tab bar */}
-      <div className="bottom-tab-bar">
-        <button className="tab-item active">
-          <span className="tab-icon">🏠</span>
-          <span className="tab-label">Home</span>
-        </button>
-        <button className="tab-item" onClick={() => router.push('/history')}>
-          <span className="tab-icon">📋</span>
-          <span className="tab-label">My Bets</span>
-        </button>
-        <button className="tab-item" onClick={() => router.push('/leaderboard')}>
-          <span className="tab-icon">🏆</span>
-          <span className="tab-label">Winners</span>
-        </button>
-        <button className="tab-item" onClick={() => router.push('/select-course')}>
-          <span className="tab-icon">⛳</span>
-          <span className="tab-label">Play</span>
-        </button>
-      </div>
+      <BottomTabBar active="home" />
 
       {/* Toast notification */}
       {toast && (

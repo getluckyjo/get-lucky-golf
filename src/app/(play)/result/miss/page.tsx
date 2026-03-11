@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import { useBet, BET_TIERS } from '@/context/BetContext'
@@ -10,6 +10,12 @@ export default function TryAgainPage() {
   const router = useRouter()
   const { selectedTier, betId, resetSession } = useBet()
   const { profile } = useAuth()
+  const [toast, setToast] = useState<string | null>(null)
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2500)
+  }
 
   useEffect(() => {
     if (!betId || betId.startsWith('bet_mock') || betId.startsWith('bet_fallback')) return
@@ -29,10 +35,11 @@ export default function TryAgainPage() {
     if (navigator.share) {
       navigator.share({
         title: 'My hole-in-one attempt on Get Lucky Golf!',
-        text: 'Watch my shot from the Get Lucky Golf app 🏌️‍♂️⛳',
+        text: 'I just took a hole-in-one challenge on Get Lucky Golf 🏌️‍♂️⛳ — next one is going in!',
+        url: 'https://get-lucky-golf.vercel.app',
       }).catch(() => {})
     } else {
-      alert('Share not available on this device')
+      showToast('Sharing not supported on this browser')
     }
   }
 
@@ -52,7 +59,7 @@ export default function TryAgainPage() {
         <div className="tryagain-illustration">🏌️‍♂️</div>
         <h3 className="tryagain-title">Great Swing!</h3>
         <p className="tryagain-text">
-          The ace is coming — it's just a matter of time. Your AI shot trace is ready to share.
+          The ace is coming — it&apos;s just a matter of time. Keep backing yourself.
         </p>
         <div className="tryagain-stats">
           <div className="tryagain-stat">
@@ -73,13 +80,20 @@ export default function TryAgainPage() {
             Play Again — {stakeLabel} →
           </button>
           <button className="btn-share" onClick={handleShareShot}>
-            📤 Share Shot Video
+            📤 Share My Attempt
           </button>
           <button className="btn-share" onClick={handleHome}>
             🏠 Back to Home
           </button>
         </div>
       </div>
+
+      {/* Toast (replaces alert) */}
+      {toast && (
+        <div className="toast gold" style={{ bottom: 40, zIndex: 200 }}>
+          {toast}
+        </div>
+      )}
     </PhoneFrame>
   )
 }

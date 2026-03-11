@@ -2,15 +2,18 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/payment-setup']
+const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/payment-setup', '/home', '/history', '/leaderboard', '/account']
 const PLAY_ROUTES = ['/select-course', '/choose-stake', '/record', '/confirm', '/result', '/verify']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Public routes and play routes need no auth
+  // API routes, public routes, play routes, and admin routes need no middleware auth
+  // (Admin routes handle their own auth in the admin layout and API handlers)
   if (
     pathname === '/' ||
+    pathname.startsWith('/api/') ||
+    pathname.startsWith('/admin') ||
     PUBLIC_ROUTES.some(r => pathname.startsWith(r)) ||
     pathname.startsWith('/auth/callback') ||
     PLAY_ROUTES.some(r => pathname.startsWith(r))

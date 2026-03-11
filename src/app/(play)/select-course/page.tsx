@@ -50,20 +50,29 @@ export default function SelectCoursePage() {
   const { selectCourse } = useBet()
   const [courses, setCourses] = useState<ApiCourse[]>([])
   const [loading, setLoading] = useState(true)
+  const [fetchError, setFetchError] = useState(false)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('All')
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null)
   const [selectedHoleId, setSelectedHoleId] = useState<string | null>(null)
 
-  useEffect(() => {
+  function loadCourses() {
+    setLoading(true)
+    setFetchError(false)
     fetch('/api/courses')
       .then(r => r.json())
       .then(data => {
         setCourses(data.courses ?? [])
         setLoading(false)
       })
-      .catch(() => setLoading(false))
-  }, [])
+      .catch(() => {
+        setFetchError(true)
+        setLoading(false)
+      })
+  }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadCourses() }, [])
 
   const regions = ['All', ...Array.from(new Set(courses.map(c => c.region ?? '').filter(Boolean)))]
 
@@ -132,9 +141,29 @@ export default function SelectCoursePage() {
                 </div>
               </div>
             ))
+          ) : fetchError ? (
+            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--green-deep)', marginBottom: 6 }}>
+                Couldn&apos;t load courses
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--gray-light)', marginBottom: 20 }}>
+                Check your connection and try again.
+              </div>
+              <button
+                onClick={loadCourses}
+                style={{
+                  padding: '10px 24px', background: 'var(--green-deep)',
+                  border: 'none', borderRadius: 10, color: 'white',
+                  fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                }}
+              >
+                Retry
+              </button>
+            </div>
           ) : filtered.length === 0 ? (
             <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--gray-light)', fontSize: 14 }}>
-              No courses found
+              {search ? `No courses matching "${search}"` : 'No courses found'}
             </div>
           ) : filtered.map(c => (
             <div

@@ -1,0 +1,248 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { ArrowLeft, Save, Plus, Trash2, ToggleLeft, ToggleRight } from 'lucide-react'
+import type { CourseRow, HoleRow } from '@/types/admin'
+
+const REGIONS = ['Western Cape', 'Gauteng', 'KwaZulu-Natal', 'Mpumalanga', 'North West', 'Eastern Cape', 'Free State', 'Limpopo', 'Northern Cape']
+
+export default function AdminEditCoursePage() {
+  const params = useParams()
+  const router = useRouter()
+  const courseId = params.courseId as string
+
+  const [course, setCourse] = useState<CourseRow | null>(null)
+  const [holes, setHoles] = useState<HoleRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const [newHole, setNewHole] = useState({ hole_number: '', par: '3', distance_metres: '' })
+  const [addingHole, setAddingHole] = useState(false)
+
+  useEffect(() => {
+    fetch(`/api/admin/courses/${courseId}`)
+      .then(r => r.json())
+      .then(data => {
+        setCourse(data.course)
+        setHoles(data.holes || [])
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [courseId])
+
+  const handleSave = async () => {
+    if (!course) return
+    setSaving(true)
+    setError('')
+    try {
+      const res = await fetch(`/api/admin/courses/${courseId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: course.name,
+          location_text: course.location_text,
+          region: course.region,
+          is_partner: course.is_partner,
+          lat: course.lat,
+          lng: course.lng,
+        }),
+      })
+      const data = await res.json()
+      if (!data.success) setError(data.error || 'Save failed')
+    } catch {
+      setError('Save failed')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAddHole = async () => {
+    setAddingHole(true)
+    try {
+      const res = await fetch(`/api/admin/courses/${courseId}/holes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hole_number: parseInt(newHole.hole_number),
+          par: parseInt(newHole.par),
+          distance_metres: newHole.distance_metres ? parseInt(newHole.distance_metres) : null,
+        }),
+      })
+      if (res.ok) {
+        setNewHole({ hole_number: '', par: '3', distance_metres: '' })
+        // Refresh holes
+        const data = await fetch(`/api/admin/courses/${courseId}`).then(r => r.json())
+        setHoles(data.holes || [])
+      }
+    } catch { /* ignore */ } finally {
+      setAddingHole(false)
+    }
+  }
+
+  const toggleHoleActive = async (holeId: string, currentActive: boolean) => {
+    await fetch(`/api/admin/courses/${courseId}/holes/${holeId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ is_active: !currentActive }),
+    })
+    setHoles(holes.map(h => h.id === holeId ? { ...h, is_active: !currentActive } : h))
+  }
+
+  const deleteHole = async (holeId: string) => {
+    await fetch(`/api/admin/courses/${courseId}/holes/${holeId}`, { method: 'DELETE' })
+    setHoles(holes.filter(h => h.id !== holeId))
+  }
+
+  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>Loading...</div>
+  if (!course) return <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>Course not found</div>
+
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: 8,
+    border: '1px solid #e5e5e5',
+    fontSize: 14,
+    color: '#111',
+    fontFamily: "'DM Sans', system-ui, sans-serif",
+  }
+
+  return (
+    <div style={{ maxWidth: 800 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button
+          onClick={() => router.push('/admin/courses')}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            padding: '6px 12px', borderRadius: 6, border: '1px solid #e5e5e5',
+            background: '#fff', cursor: 'pointer', color: '#333', fontSize: 13,
+          }}
+        >
+          <ArrowLeft size={16} /> Back
+        </button>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111' }}>Edit: {course.name}</h1>
+      </div>
+
+      {/* Course details form */}
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', padding: 24, marginBottom: 24 }}>
+        <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111', marginBottom: 16 }}>Course Details</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 6 }}>Name</label>
+            <input type="text" value={course.name} onChange={(e) => setCourse({ ...course, name: e.target.value })} style={inputStyle} />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 6 }}>Location</label>
+              <input type="text" value={course.location_text || ''} onChange={(e) => setCourse({ ...course, location_text: e.target.value })} style={inputStyle} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#333', marginBottom: 6 }}>Region</label>
+              <select value={course.region || ''} onChange={(e) => setCourse({ ...course, region: e.target.value })} style={inputStyle}>
+                <option value="">Select region</option>
+                {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+            </div>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, color: '#333', cursor: 'pointer' }}>
+            <input type="checkbox" checked={course.is_partner} onChange={(e) => setCourse({ ...course, is_partner: e.target.checked })} style={{ width: 18, height: 18 }} />
+            Partner course
+          </label>
+        </div>
+
+        {error && <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, background: '#fde8e8', color: '#c0392b', fontSize: 13 }}>{error}</div>}
+
+        <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '8px 20px', borderRadius: 8, border: 'none',
+              background: '#00432a', color: '#fff', fontSize: 14,
+              cursor: 'pointer', fontWeight: 600,
+            }}
+          >
+            <Save size={16} /> {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+        </div>
+      </div>
+
+      {/* Holes management */}
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', padding: 24 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>Par-3 Holes ({holes.length})</h3>
+        </div>
+
+        {holes.length === 0 ? (
+          <p style={{ color: '#999', fontSize: 13, marginBottom: 16 }}>No holes added yet</p>
+        ) : (
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, marginBottom: 16 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #e5e5e5' }}>
+                <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: 600, color: '#666' }}>Hole #</th>
+                <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: '#666' }}>Par</th>
+                <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: '#666' }}>Distance (m)</th>
+                <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: '#666' }}>Active</th>
+                <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: 600, color: '#666' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {holes.map((hole) => (
+                <tr key={hole.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                  <td style={{ padding: '8px 10px', fontWeight: 500, color: '#111' }}>Hole {hole.hole_number}</td>
+                  <td style={{ padding: '8px 10px', textAlign: 'center', color: '#666' }}>{hole.par}</td>
+                  <td style={{ padding: '8px 10px', textAlign: 'center', color: '#666' }}>{hole.distance_metres ?? '—'}</td>
+                  <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                    <button
+                      onClick={() => toggleHoleActive(hole.id, hole.is_active)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: hole.is_active ? '#1a7f37' : '#ccc' }}
+                    >
+                      {hole.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
+                    </button>
+                  </td>
+                  <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                    <button
+                      onClick={() => deleteHole(hole.id)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c0392b' }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        {/* Add hole form */}
+        <div style={{ borderTop: '1px solid #e5e5e5', paddingTop: 16, display: 'flex', gap: 10, alignItems: 'flex-end' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4 }}>Hole #</label>
+            <input type="number" value={newHole.hole_number} onChange={(e) => setNewHole({ ...newHole, hole_number: e.target.value })} placeholder="4" style={{ ...inputStyle, width: 70 }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4 }}>Par</label>
+            <input type="number" value={newHole.par} onChange={(e) => setNewHole({ ...newHole, par: e.target.value })} style={{ ...inputStyle, width: 60 }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: '#666', marginBottom: 4 }}>Distance (m)</label>
+            <input type="number" value={newHole.distance_metres} onChange={(e) => setNewHole({ ...newHole, distance_metres: e.target.value })} placeholder="155" style={{ ...inputStyle, width: 90 }} />
+          </div>
+          <button
+            onClick={handleAddHole}
+            disabled={addingHole || !newHole.hole_number}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 4,
+              padding: '10px 16px', borderRadius: 8, border: 'none',
+              background: '#00432a', color: '#fff', fontSize: 13,
+              cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
+            }}
+          >
+            <Plus size={14} /> Add Hole
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -79,9 +79,12 @@ function AuthForm() {
     <PhoneFrame statusTheme="dark">
       <div className="screen-signup">
         <div className="signup-header">
-          <button className="back-btn" onClick={() => router.back()}>←</button>
+          <button className="back-btn" onClick={() => router.push('/onboarding')}>←</button>
         </div>
-        <div className="signup-title-area">
+        <div style={{ textAlign: 'center', padding: '8px 24px 0' }}>
+          <img src="/logo.svg" alt="Get Lucky Golf Club" className="logo-header-dark" />
+        </div>
+        <div className="signup-title-area" style={{ paddingTop: 12 }}>
           <h3 className="signup-title">Create Your Profile</h3>
           <p className="signup-sub">Join 15,000+ golfers already playing</p>
         </div>
@@ -148,6 +151,9 @@ function AuthForm() {
           {errorMsg && (
             <div style={{ fontSize: 12, color: '#c0392b', padding: '4px 0' }}>{errorMsg}</div>
           )}
+
+          {/* Spacer so the last field isn't hidden behind the fixed button */}
+          <div style={{ height: 80, flexShrink: 0 }} />
         </form>
 
         <div className="signup-footer">
