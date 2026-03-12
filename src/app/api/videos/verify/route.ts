@@ -22,18 +22,13 @@ export async function POST(request: NextRequest) {
       analysedAt: new Date().toISOString(),
     }
 
-    // Store verification record in Supabase if configured
+    // Save video URL to the bet — verification record is only created
+    // when the user actually claims a hole-in-one (POST /api/verifications/[betId])
     try {
       const supabase = await createClient()
       const { data: { user } } = await supabase.auth.getUser()
 
       if (user && betId && !betId.startsWith('bet_mock') && !betId.startsWith('bet_fallback')) {
-        await supabase.from('verifications').upsert({
-          bet_id: betId,
-          status: 'pending',
-          footage_received_at: new Date().toISOString(),
-        })
-
         if (storagePath && !storagePath.startsWith('mock/')) {
           await supabase.from('bets')
             .update({ video_url: storagePath })
