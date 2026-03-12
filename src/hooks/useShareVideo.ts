@@ -25,9 +25,18 @@ export function useShareVideo(options: ShareVideoOptions) {
     if (typeof navigator === 'undefined') return false
     if (!navigator.share || !navigator.canShare) return false
     if (!videoBlob) return false
+
+    // iOS cannot share webm files — canShare() returns true but sharing
+    // fails with "This item cannot be shared" at the OS level.
+    // Only allow file sharing when the format is mp4 on iOS.
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
+    const videoType = videoBlob.type || ''
+    if (isIOS && !videoType.includes('mp4')) return false
+
     try {
       const testFile = new File([videoBlob], `shot.${fileExtension}`, {
-        type: videoBlob.type || 'video/webm',
+        type: videoType || 'video/webm',
       })
       return navigator.canShare({ files: [testFile] })
     } catch {
@@ -37,8 +46,9 @@ export function useShareVideo(options: ShareVideoOptions) {
 
   const canShareText = typeof navigator !== 'undefined' && Boolean(navigator.share)
 
-  const shareWithVideo = useCallback(async () => {
-    if (!videoBlob || !canShareFiles) return
+  // Returns true if share succeeded, false if it failed (so caller can fall back)
+  const shareWithVideo = useCallback(async (): Promise<boolean> => {
+    if (!videoBlob || !canShareFiles) return false
     setIsSharing(true)
     try {
       const file = new File(
@@ -47,10 +57,11 @@ export function useShareVideo(options: ShareVideoOptions) {
         { type: videoBlob.type || 'video/webm' }
       )
       await navigator.share({ title, text, url, files: [file] })
+      return true
     } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        console.warn('[share] Share failed:', err)
-      }
+      if (err instanceof Error && err.name === 'AbortError') return true // user cancelled = handled
+      console.warn('[share] Video share failed, falling back:', err)
+      return false
     } finally {
       setIsSharing(false)
     }

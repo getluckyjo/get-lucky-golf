@@ -41,8 +41,11 @@ export default function ClaimPage() {
 
   async function handleShare() {
     if (hasVideo && canShareFiles) {
-      await shareWithVideo()
-    } else if (canShareText) {
+      const ok = await shareWithVideo()
+      if (ok) return
+      // Video share failed at OS level — fall back to text
+    }
+    if (canShareText) {
       await shareTextOnly()
     } else if (hasVideo) {
       downloadVideo()
