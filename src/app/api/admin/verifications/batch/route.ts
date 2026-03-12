@@ -18,6 +18,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'ids and action are required' }, { status: 400 })
     }
 
+    // Validate action is one of the allowed values
+    const VALID_ACTIONS = ['approve', 'reject', 'under_review'] as const
+    if (!VALID_ACTIONS.includes(action)) {
+      return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
+    }
+
+    // Limit batch size to prevent DoS
+    if (ids.length > 50) {
+      return NextResponse.json({ error: 'Maximum 50 items per batch' }, { status: 400 })
+    }
+
+    // Validate and truncate notes
+    const sanitizedNotes = notes ? String(notes).slice(0, 1000) : undefined
+
     const statusMap = {
       approve: 'approved',
       reject: 'rejected',
@@ -42,7 +56,7 @@ export async function POST(request: Request) {
           status: newStatus,
           reviewed_by: auth.user?.id,
         }
-        if (notes) updates.reviewer_notes = notes
+        if (sanitizedNotes) updates.reviewer_notes = sanitizedNotes
         if (newStatus === 'approved') updates.verified_at = now
 
         const { error } = await adminClient

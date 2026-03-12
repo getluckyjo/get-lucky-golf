@@ -52,9 +52,20 @@ export async function PATCH(
       return NextResponse.json({ success: true, source: 'mock' })
     }
 
+    // Whitelist allowed fields to prevent mass assignment
+    const ALLOWED_FIELDS = ['name', 'location_text', 'region', 'country', 'lat', 'lng', 'image_url', 'is_partner'] as const
+    const updates: Record<string, unknown> = {}
+    for (const key of ALLOWED_FIELDS) {
+      if (body[key] !== undefined) updates[key] = body[key]
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+    }
+
     const { error } = await auth.adminClient
       .from('courses')
-      .update(body)
+      .update(updates)
       .eq('id', courseId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

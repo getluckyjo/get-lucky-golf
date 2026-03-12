@@ -67,9 +67,20 @@ export async function PATCH(
       return NextResponse.json({ success: true, source: 'mock', betId })
     }
 
+    // Whitelist allowed fields to prevent mass assignment
+    const ALLOWED_FIELDS = ['status', 'declared_result'] as const
+    const updates: Record<string, unknown> = {}
+    for (const key of ALLOWED_FIELDS) {
+      if (body[key] !== undefined) updates[key] = body[key]
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: 'No valid fields to update' }, { status: 400 })
+    }
+
     const { error } = await auth.adminClient
       .from('bets')
-      .update(body)
+      .update(updates)
       .eq('id', betId)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server'
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
-    const limit = Math.min(parseInt(searchParams.get('limit') ?? '20', 10), 500)
+    const parsed = parseInt(searchParams.get('limit') ?? '20', 10)
+    const limit = Math.min(Number.isNaN(parsed) ? 20 : Math.max(1, parsed), 500)
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -41,7 +42,8 @@ export async function GET(request: Request) {
       .limit(limit)
 
     if (error) {
-      return NextResponse.json({ bets: [], error: error.message })
+      console.error('[bets] Query failed:', error.message)
+      return NextResponse.json({ bets: [], error: 'Failed to load bets' }, { status: 500 })
     }
 
     return NextResponse.json({ bets: bets ?? [] })

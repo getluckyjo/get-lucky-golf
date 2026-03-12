@@ -3,9 +3,9 @@ import type { NextRequest } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-const MERCHANT_ID = process.env.PAYFAST_MERCHANT_ID ?? '10000100'
-const PASSPHRASE  = process.env.PAYFAST_PASSPHRASE  ?? 'jt7NOE43FZPn'
-const SANDBOX     = process.env.PAYFAST_SANDBOX !== 'false'
+const MERCHANT_ID = (process.env.PAYFAST_MERCHANT_ID ?? '10000100').trim()
+const PASSPHRASE  = (process.env.PAYFAST_PASSPHRASE  ?? '').trim()
+const SANDBOX     = (process.env.PAYFAST_SANDBOX ?? 'true').trim() !== 'false'
 
 // PayFast's published source IP ranges (CIDR /28 = 16 IPs each)
 // Ref: https://developers.payfast.co.za/docs#notify
@@ -49,8 +49,8 @@ async function validateWithPayFast(rawBody: string): Promise<boolean> {
     return text.trim().toUpperCase() === 'VALID'
   } catch (err) {
     console.error('[PayFast ITN] Validate endpoint error:', err)
-    // Don't fail hard on network issues — signature check is the primary guard
-    return true
+    // Fail closed on network issues — reject the ITN; PayFast will retry
+    return false
   }
 }
 
@@ -64,14 +64,18 @@ export async function POST(request: NextRequest) {
 
     // ── 1. IP whitelist (production only — sandbox IPs vary) ──────────────
     if (!SANDBOX) {
-      // x-forwarded-for format: "client, proxy1, proxy2"
-      // The leftmost IP is the original requester (PayFast in this case)
-      const ip =
-        request.headers.get('x-forwarded-for')?.split(',')[0].trim() ??
-        request.headers.get('x-real-ip') ??
-        ''
-      if (!VALID_IPS.has(ip)) {
-        console.error('[PayFast ITN] Rejected unknown IP:', ip)
+      // On Vercel/trusted proxies, x-forwarded-for is set by the edge and is reliable.
+      // Check all IPs in the chain to find a match against PayFast's known ranges.
+      const forwardedFor = request.headers.get('x-forwarded-for') ?? ''
+      const realIp = request.headers.get('x-real-ip') ?? ''
+      const allIps = [
+        ...forwardedFor.split(',').map(ip => ip.trim()),
+        realIp.trim(),
+      ].filter(Boolean)
+
+      const hasValidIp = allIps.some(ip => VALID_IPS.has(ip))
+      if (!hasValidIp) {
+        console.error('[PayFast ITN] Rejected — no valid IP found in:', allIps)
         return new NextResponse('Forbidden', { status: 403 })
       }
     }

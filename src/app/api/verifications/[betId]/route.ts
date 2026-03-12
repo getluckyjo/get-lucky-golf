@@ -21,6 +21,18 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Verify the bet belongs to this user before returning verification data (prevent IDOR)
+    const { data: bet } = await supabase
+      .from('bets')
+      .select('id')
+      .eq('id', betId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!bet) {
+      return NextResponse.json({ verification: null, source: 'not_found' })
+    }
+
     const { data: verification, error } = await supabase
       .from('verifications')
       .select('*')

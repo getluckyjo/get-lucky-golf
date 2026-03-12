@@ -23,9 +23,21 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Validate allowed status and declared_result values
+    const VALID_STATUSES = ['miss', 'claimed'] as const
+    const VALID_RESULTS = ['miss', 'win'] as const
+
     const updates: Record<string, unknown> = {}
-    if (status) updates.status = status
+    if (status) {
+      if (!VALID_STATUSES.includes(status)) {
+        return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+      }
+      updates.status = status
+    }
     if (declared_result) {
+      if (!VALID_RESULTS.includes(declared_result)) {
+        return NextResponse.json({ error: 'Invalid declared_result' }, { status: 400 })
+      }
       updates.declared_result = declared_result
       updates.declared_at = new Date().toISOString()
     }

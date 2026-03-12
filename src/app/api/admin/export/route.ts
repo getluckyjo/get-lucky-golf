@@ -3,7 +3,12 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { MOCK_ADMIN_BETS, MOCK_ADMIN_USERS, MOCK_ADMIN_VERIFICATIONS } from '@/lib/admin-mock-data'
 
 function toCSV(headers: string[], rows: string[][]): string {
-  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`
+  const escape = (v: string) => {
+    let safe = v.replace(/"/g, '""')
+    // Prevent CSV injection: prefix formula-triggering characters with a single quote
+    if (/^[=+\-@\t\r]/.test(safe)) safe = `'${safe}`
+    return `"${safe}"`
+  }
   const lines = [headers.map(escape).join(',')]
   rows.forEach(row => lines.push(row.map(v => escape(String(v ?? ''))).join(',')))
   return lines.join('\n')
