@@ -22,7 +22,7 @@ export default function AdminTopBar({ adminName, adminEmail }: AdminTopBarProps)
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <Shield size={18} color="#00432a" />
+        <Shield size={18} color="#007728" />
         <span style={{ fontSize: 13, color: '#666', fontWeight: 500 }}>Admin Panel</span>
       </div>
 
@@ -41,7 +41,7 @@ export default function AdminTopBar({ adminName, adminEmail }: AdminTopBarProps)
             width: 36,
             height: 36,
             borderRadius: '50%',
-            background: '#00432a',
+            background: '#007728',
             color: '#fff',
             display: 'flex',
             alignItems: 'center',

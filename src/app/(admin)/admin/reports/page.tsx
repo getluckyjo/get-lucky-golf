@@ -102,7 +102,7 @@ export default function AdminReportsPage() {
 
       {/* KPI cards */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
-        <StatCard title="Total Revenue" value={formatZAR(revenue?.totalRevenue ?? 0)} icon={DollarSign} accent="#00432a" subtitle={`${revenue?.totalBets ?? 0} bets`} />
+        <StatCard title="Total Revenue" value={formatZAR(revenue?.totalRevenue ?? 0)} icon={DollarSign} accent="#007728" subtitle={`${revenue?.totalBets ?? 0} bets`} />
         <StatCard title="Total Payouts" value={formatZAR(revenue?.totalPayouts ?? 0)} icon={Trophy} accent="#c0392b" />
         <StatCard title="Net Profit" value={formatZAR(revenue?.netProfit ?? 0)} icon={TrendingUp} accent={(revenue?.netProfit ?? 0) >= 0 ? '#1a7f37' : '#c0392b'} subtitle={`${revenue?.margin ?? '0'}% margin`} />
         <StatCard title="Total Bets" value={String(revenue?.totalBets ?? 0)} icon={BarChart3} accent="#1565c0" />
@@ -116,8 +116,8 @@ export default function AdminReportsPage() {
             onClick={() => setActiveTab(tab.key as 'overview' | 'payouts')}
             style={{
               padding: '10px 20px', background: 'none', border: 'none',
-              borderBottom: activeTab === tab.key ? '2px solid #00432a' : '2px solid transparent',
-              color: activeTab === tab.key ? '#00432a' : '#666',
+              borderBottom: activeTab === tab.key ? '2px solid #007728' : '2px solid transparent',
+              color: activeTab === tab.key ? '#007728' : '#666',
               fontWeight: activeTab === tab.key ? 600 : 400, fontSize: 14, cursor: 'pointer',
             }}
           >
@@ -145,7 +145,7 @@ export default function AdminReportsPage() {
                         style={{
                           height: '100%',
                           width: `${(item.revenue / maxRev) * 100}%`,
-                          background: '#00432a',
+                          background: '#007728',
                           borderRadius: 4,
                           transition: 'width 0.3s',
                         }}
@@ -178,7 +178,7 @@ export default function AdminReportsPage() {
                         style={{
                           height: '100%',
                           width: `${(item.revenue / maxRev) * 100}%`,
-                          background: '#2d7a4f',
+                          background: '#2d9448',
                           borderRadius: 4,
                         }}
                       />

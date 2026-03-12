@@ -76,7 +76,7 @@ export default function VerificationDetailPage() {
         Claim not found.
         <button
           onClick={() => router.push('/admin/verification-queue')}
-          style={{ display: 'block', margin: '16px auto', color: '#00432a', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+          style={{ display: 'block', margin: '16px auto', color: '#007728', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
         >
           Back to queue
         </button>
@@ -155,7 +155,7 @@ export default function VerificationDetailPage() {
                 <Trophy size={16} color="#666" />
                 <div>
                   <div style={{ fontSize: 13, color: '#999' }}>Potential Payout</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#00432a' }}>{formatZAR(detail.potentialWinPence)}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#007728' }}>{formatZAR(detail.potentialWinPence)}</div>
                   <div style={{ fontSize: 12, color: '#999' }}>Stake: {formatZAR(detail.stakePence)}</div>
                 </div>
               </div>
@@ -209,14 +209,14 @@ export default function VerificationDetailPage() {
                       <div
                         style={{
                           width: 28, height: 28, borderRadius: '50%',
-                          background: isDone ? '#00432a' : isRejected && i === 0 ? '#c0392b' : '#f0f0f0',
+                          background: isDone ? '#007728' : isRejected && i === 0 ? '#c0392b' : '#f0f0f0',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}
                       >
                         <Icon size={14} color={isDone ? '#fff' : '#999'} />
                       </div>
                       {i < TIMELINE_STAGES.length - 1 && (
-                        <div style={{ width: 2, height: 24, background: isDone ? '#00432a' : '#e5e5e5' }} />
+                        <div style={{ width: 2, height: 24, background: isDone ? '#007728' : '#e5e5e5' }} />
                       )}
                     </div>
                     <div style={{ paddingTop: 4, paddingBottom: 16 }}>

@@ -98,7 +98,7 @@ export default function VideoPlayer({ src }: VideoPlayerProps) {
                 justifyContent: 'center',
               }}
             >
-              <Play size={24} color="#00432a" style={{ marginLeft: 3 }} />
+              <Play size={24} color="#007728" style={{ marginLeft: 3 }} />
             </div>
           </div>
         )}

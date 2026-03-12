@@ -37,7 +37,7 @@ export default function AdminSidebar({ pendingClaims = 0 }: { pendingClaims?: nu
       style={{
         width: collapsed ? 72 : 250,
         minHeight: '100vh',
-        background: '#00432a',
+        background: '#007728',
         borderRight: '1px solid rgba(255,255,255,0.08)',
         display: 'flex',
         flexDirection: 'column',
@@ -61,7 +61,7 @@ export default function AdminSidebar({ pendingClaims = 0 }: { pendingClaims?: nu
         {!collapsed && (
           <span
             style={{
-              fontFamily: "'Playfair Display', Georgia, serif",
+              fontFamily: "'Poster Gothic', Georgia, sans-serif",
               fontWeight: 700,
               fontSize: 16,
               color: '#fff',
@@ -136,7 +136,7 @@ export default function AdminSidebar({ pendingClaims = 0 }: { pendingClaims?: nu
           width: 28,
           height: 28,
           borderRadius: '50%',
-          background: '#005a32',
+          background: '#006320',
           border: '2px solid rgba(255,255,255,0.15)',
           color: '#fff',
           cursor: 'pointer',

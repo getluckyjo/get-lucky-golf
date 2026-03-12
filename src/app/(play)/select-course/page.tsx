@@ -21,6 +21,7 @@ interface ApiCourse {
   country: string
   lat: number | null
   lng: number | null
+  image_url: string | null
   is_partner: boolean
   holes: ApiHole[]
 }
@@ -102,11 +103,11 @@ export default function SelectCoursePage() {
   return (
     <PhoneFrame statusTheme="dark">
       <div className="screen-course">
-        <div className="signup-header" style={{ padding: '16px 24px 0' }}>
+        <div className="signup-header" style={{ padding: 'var(--space-md) var(--page-px) 0' }}>
           <button className="back-btn" onClick={() => router.back()}>←</button>
         </div>
-        <div className="signup-title-area" style={{ padding: '12px 24px 4px' }}>
-          <h3 className="signup-title" style={{ fontSize: 22 }}>Select Course</h3>
+        <div className="signup-title-area" style={{ padding: 'var(--space-sm) var(--page-px) 4px' }}>
+          <h3 className="signup-title" style={{ fontSize: 'var(--text-xl)' }}>Select Course</h3>
         </div>
 
         <div className="course-search">
@@ -142,27 +143,27 @@ export default function SelectCoursePage() {
               </div>
             ))
           ) : fetchError ? (
-            <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 12 }}>📡</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--green-deep)', marginBottom: 6 }}>
+            <div style={{ padding: 'var(--space-2xl) var(--page-px)', textAlign: 'center' }}>
+              <div style={{ fontSize: 'var(--text-2xl)', marginBottom: 'var(--space-sm)' }}>📡</div>
+              <div style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--green-deep)', marginBottom: 6 }}>
                 Couldn&apos;t load courses
               </div>
-              <div style={{ fontSize: 13, color: 'var(--gray-light)', marginBottom: 20 }}>
+              <div style={{ fontSize: 'var(--text-body)', color: 'var(--gray-light)', marginBottom: 'var(--space-lg)' }}>
                 Check your connection and try again.
               </div>
               <button
                 onClick={loadCourses}
                 style={{
-                  padding: '10px 24px', background: 'var(--green-deep)',
-                  border: 'none', borderRadius: 10, color: 'white',
-                  fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                  padding: 'var(--space-sm) var(--page-px)', background: 'var(--green-deep)',
+                  border: 'none', borderRadius: 'var(--radius-sm)', color: 'white',
+                  fontSize: 'var(--text-md)', fontWeight: 600, cursor: 'pointer',
                 }}
               >
                 Retry
               </button>
             </div>
           ) : filtered.length === 0 ? (
-            <div style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--gray-light)', fontSize: 14 }}>
+            <div style={{ padding: 'var(--space-2xl) var(--page-px)', textAlign: 'center', color: 'var(--gray-light)', fontSize: 'var(--text-md)' }}>
               {search ? `No courses matching "${search}"` : 'No courses found'}
             </div>
           ) : filtered.map(c => (
@@ -172,16 +173,11 @@ export default function SelectCoursePage() {
               style={{ position: 'relative' }}
               onClick={() => handleSelectCourse(c)}
             >
-              {c.is_partner && (
-                <div style={{
-                  position: 'absolute', top: 8, right: 8, fontSize: 9, fontWeight: 700,
-                  background: 'var(--gold)', color: 'white', padding: '2px 6px', borderRadius: 4,
-                  letterSpacing: '0.05em',
-                }}>
-                  PARTNER
-                </div>
+              {c.image_url ? (
+                <img src={c.image_url} alt={c.name} className="course-thumb" style={{ objectFit: 'cover' }} />
+              ) : (
+                <div className="course-thumb">⛳</div>
               )}
-              <div className="course-thumb">⛳</div>
               <div className="course-info">
                 <div className="course-name">{c.name}</div>
                 <div className="course-location">📍 {c.location_text ?? c.region}</div>
@@ -200,14 +196,14 @@ export default function SelectCoursePage() {
             <div className="hole-info-title">Challenge Hole Details</div>
 
             {selectedCourse.holes.length > 1 && (
-              <div style={{ display: 'flex', gap: 6, marginBottom: 12, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--space-xs)', marginBottom: 'var(--space-sm)', flexWrap: 'wrap' }}>
                 {selectedCourse.holes.map(h => (
                   <button
                     key={h.id}
                     onClick={() => setSelectedHoleId(h.id)}
                     style={{
-                      flex: 1, minWidth: 60, padding: '6px 4px', borderRadius: 8,
-                      fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                      flex: 1, minWidth: 60, padding: '6px 4px', borderRadius: 'var(--radius-sm)',
+                      fontSize: 'var(--text-sm)', fontWeight: 600, cursor: 'pointer',
                       border: selectedHole.id === h.id ? '2px solid var(--green-mid)' : '1px solid #ddd',
                       background: selectedHole.id === h.id ? 'rgba(74,157,91,0.1)' : 'white',
                       color: 'var(--green-deep)',
@@ -233,7 +229,7 @@ export default function SelectCoursePage() {
                 <div className="hole-stat-label">Par</div>
               </div>
             </div>
-            <div style={{ marginTop: 16 }}>
+            <div style={{ marginTop: 'var(--space-md)' }}>
               <button className="btn-primary" onClick={handleContinue}>
                 Continue →
               </button>

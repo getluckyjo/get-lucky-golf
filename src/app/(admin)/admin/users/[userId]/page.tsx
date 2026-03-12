@@ -115,9 +115,9 @@ export default function AdminUserDetailPage() {
       {/* Stats row */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
         <StatCard title="Total Attempts" value={String(user.totalAttempts)} icon={Ticket} accent="#1565c0" />
-        <StatCard title="Total Staked" value={formatZAR(user.totalStaked)} icon={CreditCard} accent="#00432a" />
+        <StatCard title="Total Staked" value={formatZAR(user.totalStaked)} icon={CreditCard} accent="#007728" />
         <StatCard title="Total Won" value={user.totalWon > 0 ? formatZAR(user.totalWon) : 'R0'} icon={Trophy} accent="#b8860b" />
-        <StatCard title="Handicap" value={user.handicap !== null ? String(user.handicap) : '—'} icon={User} accent="#2d7a4f" />
+        <StatCard title="Handicap" value={user.handicap !== null ? String(user.handicap) : '—'} icon={User} accent="#2d9448" />
       </div>
 
       {/* Bet history */}
@@ -143,7 +143,7 @@ export default function AdminUserDetailPage() {
               bets.map((bet) => (
                 <tr key={bet.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '10px 14px', color: '#111' }}>{bet.courseName}, H{bet.holeNumber}</td>
-                  <td style={{ padding: '10px 14px', color: '#00432a', fontWeight: 600, fontSize: 12 }}>{TIER_LABELS[bet.tier]}</td>
+                  <td style={{ padding: '10px 14px', color: '#007728', fontWeight: 600, fontSize: 12 }}>{TIER_LABELS[bet.tier]}</td>
                   <td style={{ padding: '10px 14px', textAlign: 'right', color: '#111' }}>{formatZAR(bet.stakePence)}</td>
                   <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600, color: '#111' }}>{formatZAR(bet.potentialWinPence)}</td>
                   <td style={{ padding: '10px 14px', textAlign: 'center' }}><StatusBadge status={bet.status} small /></td>

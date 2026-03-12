@@ -50,7 +50,7 @@ export default function AdminDashboardPage() {
           title="Total Revenue"
           value={formatZAR(stats?.totalRevenue ?? 0)}
           icon={DollarSign}
-          accent="#00432a"
+          accent="#007728"
           subtitle={`${stats?.totalBets ?? 0} total bets`}
         />
         <StatCard
@@ -76,7 +76,7 @@ export default function AdminDashboardPage() {
           title="Total Users"
           value={String(stats?.totalUsers ?? 0)}
           icon={Users}
-          accent="#2d7a4f"
+          accent="#2d9448"
         />
       </div>
 
@@ -113,7 +113,7 @@ export default function AdminDashboardPage() {
             flex: 1,
             padding: '16px 20px',
             borderRadius: 12,
-            background: '#00432a',
+            background: '#007728',
             border: 'none',
             color: '#fff',
             display: 'flex',
@@ -174,7 +174,7 @@ export default function AdminDashboardPage() {
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>Recent Bets</h3>
             <button
               onClick={() => router.push('/admin/bets')}
-              style={{ fontSize: 13, color: '#00432a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
+              style={{ fontSize: 13, color: '#007728', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
             >
               View all
             </button>
@@ -211,7 +211,7 @@ export default function AdminDashboardPage() {
             <h3 style={{ fontSize: 15, fontWeight: 700, color: '#111' }}>Recent Claims</h3>
             <button
               onClick={() => router.push('/admin/verification-queue')}
-              style={{ fontSize: 13, color: '#00432a', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
+              style={{ fontSize: 13, color: '#007728', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}
             >
               View queue
             </button>

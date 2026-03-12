@@ -65,6 +65,7 @@ export interface Database {
           country: string
           lat: number | null
           lng: number | null
+          image_url: string | null
           is_partner: boolean
           created_at: string
         }
@@ -76,6 +77,7 @@ export interface Database {
           country?: string
           lat?: number | null
           lng?: number | null
+          image_url?: string | null
           is_partner?: boolean
           created_at?: string
         }
@@ -87,6 +89,7 @@ export interface Database {
           country?: string
           lat?: number | null
           lng?: number | null
+          image_url?: string | null
           is_partner?: boolean
           created_at?: string
         }

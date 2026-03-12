@@ -7,7 +7,7 @@ import { useBet } from '@/context/BetContext'
 
 export default function ConfirmPage() {
   const router = useRouter()
-  const { videoBlob, betId, declareResult } = useBet()
+  const { videoBlob, betId, declareResult, uploadStatus, uploadProgress } = useBet()
   const videoRef = useRef<HTMLVideoElement>(null)
   const [analysing, setAnalysing] = useState(true)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
@@ -50,7 +50,7 @@ export default function ConfirmPage() {
   return (
     <PhoneFrame statusTheme="dark">
       <div className="screen-confirm">
-        <div className="signup-header" style={{ padding: '16px 24px 0' }}>
+        <div className="signup-header" style={{ padding: 'var(--space-md) var(--page-px) 0' }}>
           <button className="back-btn" onClick={() => router.back()}>←</button>
         </div>
         <div className="confirm-video">
@@ -67,6 +67,33 @@ export default function ConfirmPage() {
             />
           ) : (
             <div className="confirm-play-btn">▶</div>
+          )}
+          {uploadStatus === 'uploading' && (
+            <div style={{
+              position: 'absolute', top: 12, left: 12, zIndex: 5,
+              display: 'flex', alignItems: 'center', gap: 8,
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
+              padding: '6px 14px', borderRadius: 20,
+              color: 'white', fontSize: 12, fontWeight: 600,
+            }}>
+              <div style={{
+                width: 10, height: 10, borderRadius: '50%',
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderTopColor: '#d4af37',
+                animation: 'spin 0.8s linear infinite',
+              }} />
+              Saving video… {uploadProgress}%
+            </div>
+          )}
+          {uploadStatus === 'error' && (
+            <div style={{
+              position: 'absolute', top: 12, left: 12, zIndex: 5,
+              background: 'rgba(180,60,60,0.7)', backdropFilter: 'blur(8px)',
+              padding: '6px 14px', borderRadius: 20,
+              color: 'white', fontSize: 12, fontWeight: 600,
+            }}>
+              ⚠ Video save failed
+            </div>
           )}
           <div className="confirm-ai-badge">
             {analysing

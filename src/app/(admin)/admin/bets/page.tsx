@@ -148,7 +148,7 @@ export default function AdminBetsPage() {
                   <td style={{ padding: '12px 14px', color: '#666' }}>
                     {bet.courseName}, H{bet.holeNumber}
                   </td>
-                  <td style={{ padding: '12px 14px', fontSize: 12, color: '#00432a', fontWeight: 600 }}>
+                  <td style={{ padding: '12px 14px', fontSize: 12, color: '#007728', fontWeight: 600 }}>
                     {TIER_LABELS[bet.tier]}
                   </td>
                   <td style={{ padding: '12px 14px', textAlign: 'right', color: '#111' }}>

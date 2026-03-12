@@ -66,7 +66,7 @@ export default function AdminCoursesPage() {
           onClick={() => router.push('/admin/courses/new')}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px',
-            borderRadius: 8, border: 'none', background: '#00432a', color: '#fff',
+            borderRadius: 8, border: 'none', background: '#007728', color: '#fff',
             fontSize: 13, cursor: 'pointer', fontWeight: 600,
           }}
         >
@@ -122,7 +122,7 @@ export default function AdminCoursesPage() {
                 <tr key={course.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '12px 14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <MapPin size={16} color="#00432a" />
+                      <MapPin size={16} color="#007728" />
                       <span style={{ fontWeight: 500, color: '#111' }}>{course.name}</span>
                     </div>
                   </td>
@@ -149,7 +149,7 @@ export default function AdminCoursesPage() {
                         style={{
                           display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px',
                           borderRadius: 6, border: '1px solid #e5e5e5', background: '#fff',
-                          fontSize: 12, cursor: 'pointer', color: '#00432a',
+                          fontSize: 12, cursor: 'pointer', color: '#007728',
                         }}
                       >
                         <Edit size={12} /> Edit

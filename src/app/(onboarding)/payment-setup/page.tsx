@@ -54,34 +54,34 @@ export default function PaymentSetupPage() {
   return (
     <PhoneFrame statusTheme="dark">
       <div className="screen-payment">
-        <div className="signup-header" style={{ padding: '20px 24px 0' }}>
+        <div className="signup-header" style={{ padding: 'var(--space-lg) var(--page-px) 0' }}>
           <button className="back-btn" onClick={() => router.back()}>←</button>
         </div>
-        <div style={{ textAlign: 'center', padding: '10px 24px 0' }}>
-          <img src="/logo.svg" alt="Get Lucky Golf Club" className="logo-header-dark" style={{ width: 120 }} />
+        <div style={{ textAlign: 'center', padding: 'var(--space-sm) var(--page-px) 0' }}>
+          <img src="/logo.svg" alt="Get Lucky Golf Club" className="logo-header-dark" style={{ width: 'clamp(100px, 30vw, 120px)' }} />
         </div>
-        <div className="signup-title-area" style={{ padding: '12px 24px 12px' }}>
+        <div className="signup-title-area" style={{ padding: 'var(--space-sm) var(--page-px) var(--space-sm)' }}>
           <h3 className="signup-title">Payment Setup</h3>
           <p className="signup-sub">Choose how you'll pay when you play</p>
         </div>
 
         {/* PayFast trust badge */}
         <div style={{
-          margin: '0 24px 20px',
+          margin: '0 var(--page-px) var(--space-lg)',
           background: 'rgba(26, 61, 46, 0.07)',
-          borderRadius: 14,
-          padding: '14px 16px',
+          borderRadius: 'var(--radius-md)',
+          padding: 'var(--space-md)',
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
+          gap: 'var(--space-sm)',
           border: '1px solid rgba(26, 61, 46, 0.12)',
         }}>
-          <div style={{ fontSize: 26 }}>🔒</div>
+          <div style={{ fontSize: 'var(--text-2xl)' }}>🔒</div>
           <div>
-            <div style={{ color: '#1a3d2e', fontWeight: 700, fontSize: 13 }}>
+            <div style={{ color: '#1a3d2e', fontWeight: 700, fontSize: 'var(--text-body)' }}>
               Powered by PayFast
             </div>
-            <div style={{ color: '#5a7a6a', fontSize: 11, marginTop: 2, lineHeight: 1.4 }}>
+            <div style={{ color: '#5a7a6a', fontSize: 'var(--text-xs)', marginTop: 2, lineHeight: 1.4 }}>
               SA&apos;s most trusted payment gateway. Your card details are
               never stored by Get Lucky.
             </div>
@@ -106,7 +106,7 @@ export default function PaymentSetupPage() {
           ))}
         </div>
         <div className="payment-secure">🔒 256-bit SSL · Secured by PayFast</div>
-        <div style={{ padding: '0 24px 40px' }}>
+        <div style={{ padding: '0 var(--page-px) var(--space-2xl)' }}>
           <button
             className="btn-primary"
             onClick={handleSave}

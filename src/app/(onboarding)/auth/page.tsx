@@ -59,7 +59,7 @@ function AuthForm() {
       <PhoneFrame statusTheme="dark">
         <div className="screen-signup">
           <div className="signup-title-area" style={{ marginTop: 80 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>📧</div>
+            <div style={{ fontSize: 'var(--text-hero)', marginBottom: 'var(--space-md)' }}>📧</div>
             <h3 className="signup-title">Check Your Email</h3>
             <p className="signup-sub" style={{ maxWidth: 260 }}>
               We sent a magic link to <strong>{email}</strong>. Click it to sign in.
@@ -81,7 +81,7 @@ function AuthForm() {
         <div className="signup-header">
           <button className="back-btn" onClick={() => router.push('/onboarding')}>←</button>
         </div>
-        <div style={{ textAlign: 'center', padding: '8px 24px 0' }}>
+        <div style={{ textAlign: 'center', padding: 'var(--space-xs) var(--page-px) 0' }}>
           <img src="/logo.svg" alt="Get Lucky Golf Club" className="logo-header-dark" />
         </div>
         <div className="signup-title-area" style={{ paddingTop: 12 }}>
@@ -90,7 +90,7 @@ function AuthForm() {
         </div>
 
         {oauthError && (
-          <div style={{ margin: '0 24px 12px', padding: '10px 14px', background: 'rgba(220,50,50,0.1)', borderRadius: 10, fontSize: 13, color: '#c0392b' }}>
+          <div style={{ margin: '0 var(--page-px) var(--space-sm)', padding: 'var(--space-sm) var(--space-md)', background: 'rgba(220,50,50,0.1)', borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-body)', color: '#c0392b' }}>
             Sign-in failed. Please try again.
           </div>
         )}
@@ -149,7 +149,7 @@ function AuthForm() {
           </div>
 
           {errorMsg && (
-            <div style={{ fontSize: 12, color: '#c0392b', padding: '4px 0' }}>{errorMsg}</div>
+            <div style={{ fontSize: 'var(--text-sm)', color: '#c0392b', padding: '4px 0' }}>{errorMsg}</div>
           )}
 
           {/* Spacer so the last field isn't hidden behind the fixed button */}

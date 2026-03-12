@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/payment-setup', '/home', '/history', '/leaderboard', '/account']
+const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/home', '/history', '/leaderboard', '/account']
 const PLAY_ROUTES = ['/select-course', '/choose-stake', '/record', '/confirm', '/result', '/verify']
 
 export async function proxy(request: NextRequest) {
@@ -61,6 +61,6 @@ export default proxy
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|otf|ttf|woff|woff2)$).*)',
   ],
 }

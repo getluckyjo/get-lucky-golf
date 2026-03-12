@@ -159,7 +159,7 @@ export default function AdminEditCoursePage() {
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               padding: '8px 20px', borderRadius: 8, border: 'none',
-              background: '#00432a', color: '#fff', fontSize: 14,
+              background: '#007728', color: '#fff', fontSize: 14,
               cursor: 'pointer', fontWeight: 600,
             }}
           >
@@ -235,7 +235,7 @@ export default function AdminEditCoursePage() {
             style={{
               display: 'flex', alignItems: 'center', gap: 4,
               padding: '10px 16px', borderRadius: 8, border: 'none',
-              background: '#00432a', color: '#fff', fontSize: 13,
+              background: '#007728', color: '#fff', fontSize: 13,
               cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap',
             }}
           >

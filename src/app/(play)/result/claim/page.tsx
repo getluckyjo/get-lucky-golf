@@ -82,7 +82,7 @@ export default function ClaimPage() {
   return (
     <PhoneFrame statusTheme="dark">
       <div className="screen-upload">
-        <div className="signup-header" style={{ padding: '16px 24px 0' }}>
+        <div className="signup-header" style={{ padding: 'var(--space-md) var(--page-px) 0' }}>
           <button className="back-btn" onClick={() => router.back()}>←</button>
         </div>
         <div className="upload-celebration">
@@ -136,14 +136,14 @@ export default function ClaimPage() {
             onClick={() => { resetSession(); router.push('/home') }}
             style={{
               background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)',
-              fontSize: 13, marginTop: 12, cursor: 'pointer', padding: '8px 0',
+              fontSize: 'var(--text-body)', marginTop: 'var(--space-sm)', cursor: 'pointer', padding: '8px 0',
               textDecoration: 'underline', textUnderlineOffset: 3,
             }}
           >
             I&apos;ll upload documents later
           </button>
           <div style={{
-            fontSize: 11, color: 'rgba(255,255,255,0.35)',
+            fontSize: 'var(--text-xs)', color: 'rgba(255,255,255,0.35)',
             marginTop: 4, textAlign: 'center',
           }}>
             You have 7 days to submit from the date of your shot

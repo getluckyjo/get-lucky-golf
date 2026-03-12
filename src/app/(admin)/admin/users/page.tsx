@@ -132,7 +132,7 @@ export default function AdminUsersPage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <div
                         style={{
-                          width: 32, height: 32, borderRadius: '50%', background: '#00432a',
+                          width: 32, height: 32, borderRadius: '50%', background: '#007728',
                           color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: 13, fontWeight: 700, flexShrink: 0,
                         }}
@@ -142,7 +142,7 @@ export default function AdminUsersPage() {
                       <div>
                         <div style={{ fontWeight: 500, color: '#111', display: 'flex', alignItems: 'center', gap: 4 }}>
                           {user.name || 'Unknown'}
-                          {user.isAdmin && <Shield size={12} color="#00432a" />}
+                          {user.isAdmin && <Shield size={12} color="#007728" />}
                         </div>
                         <div style={{ fontSize: 12, color: '#999' }}>{user.email}</div>
                       </div>
@@ -172,7 +172,7 @@ export default function AdminUsersPage() {
                       style={{
                         display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px',
                         borderRadius: 6, border: '1px solid #e5e5e5', background: '#fff',
-                        fontSize: 12, cursor: 'pointer', color: '#00432a', fontWeight: 500, margin: '0 auto',
+                        fontSize: 12, cursor: 'pointer', color: '#007728', fontWeight: 500, margin: '0 auto',
                       }}
                     >
                       <Eye size={13} /> View

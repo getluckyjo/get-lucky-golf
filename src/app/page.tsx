@@ -16,21 +16,5 @@ export default async function RootPage() {
     redirect('/splash')
   }
 
-  // User is authenticated — check if payment setup done
-  try {
-    const supabase = await createClient()
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('payment_setup_done')
-      .eq('id', session.user.id)
-      .single()
-
-    if (!profile?.payment_setup_done) {
-      redirect('/payment-setup')
-    }
-  } catch {
-    // Profile not found or Supabase error — go to home
-  }
-
   redirect('/home')
 }

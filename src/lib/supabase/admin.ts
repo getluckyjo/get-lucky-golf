@@ -9,8 +9,8 @@ import type { Database } from '@/types/database'
  * Requires SUPABASE_SERVICE_ROLE_KEY in your environment variables.
  */
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim()
+  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim()
 
   if (!key) {
     throw new Error('SUPABASE_SERVICE_ROLE_KEY is not set. Required for server-to-server operations.')

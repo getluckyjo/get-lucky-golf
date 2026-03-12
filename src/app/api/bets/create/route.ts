@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      console.error('[bets/create] DB insert failed:', error.message)
+      console.error('[bets/create] DB insert failed:', error.message, error.code, error.details)
       return NextResponse.json({ error: 'Failed to create bet' }, { status: 500 })
     }
 

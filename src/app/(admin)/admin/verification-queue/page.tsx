@@ -198,7 +198,7 @@ export default function VerificationQueuePage() {
             alignItems: 'center',
             gap: 12,
             padding: '10px 16px',
-            background: '#00432a',
+            background: '#007728',
             borderRadius: 8,
             marginBottom: 12,
             color: '#fff',
@@ -308,7 +308,7 @@ export default function VerificationQueuePage() {
                     {item.courseName}, Hole {item.holeNumber}
                   </td>
                   <td style={{ padding: '12px 14px' }}>
-                    <span style={{ fontSize: 12, color: '#00432a', fontWeight: 600 }}>
+                    <span style={{ fontSize: 12, color: '#007728', fontWeight: 600 }}>
                       {TIER_LABELS[item.tier] || item.tier}
                     </span>
                   </td>
@@ -337,7 +337,7 @@ export default function VerificationQueuePage() {
                         background: '#fff',
                         fontSize: 12,
                         cursor: 'pointer',
-                        color: '#00432a',
+                        color: '#007728',
                         fontWeight: 500,
                         margin: '0 auto',
                       }}

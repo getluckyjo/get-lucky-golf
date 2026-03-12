@@ -1,60 +1,36 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-
 interface PhoneFrameProps {
   children: React.ReactNode
   statusTheme?: 'light' | 'dark'
   showStatus?: boolean
 }
 
-function useLiveClock() {
-  const [time, setTime] = useState('')
-  useEffect(() => {
-    function update() {
-      setTime(new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false }))
-    }
-    update()
-    const id = setInterval(update, 10000)
-    return () => clearInterval(id)
-  }, [])
-  return time
-}
-
-export default function PhoneFrame({ children, statusTheme = 'dark', showStatus = true }: PhoneFrameProps) {
-  const time = useLiveClock()
-
+export default function PhoneFrame({ children }: PhoneFrameProps) {
   return (
     <div
+      className="phone-frame-outer"
       style={{
         minHeight: '100vh',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         background: '#0d0d0d',
-        padding: '20px',
+        padding: 'clamp(12px, 3vw, 20px)',
       }}
     >
       {/* Desktop: phone frame wrapper */}
       <div className="phone-frame-shell" style={{ position: 'relative' }}>
         <div className="phone-notch" />
         <div className="phone-screen">
-          {showStatus && (
-            <div className={`phone-status-bar ${statusTheme}`}>
-              <span style={{ fontVariantNumeric: 'tabular-nums' }}>{time || '9:41'}</span>
-              <div className="status-right">
-                <span>⚡</span>
-                <span>📶</span>
-              </div>
-            </div>
-          )}
           {children}
         </div>
       </div>
 
-      {/* Mobile: full-screen override */}
+      {/* Responsive overrides */}
       <style>{`
         @media (max-width: 430px) {
+          .phone-frame-outer { padding: 0 !important; }
           .phone-frame-shell {
             width: 100vw !important;
             height: 100dvh !important;
@@ -64,6 +40,14 @@ export default function PhoneFrame({ children, statusTheme = 'dark', showStatus 
           }
           .phone-notch { display: none; }
           .phone-screen { border-radius: 0 !important; }
+        }
+        @media (min-width: 431px) and (max-width: 768px) {
+          .phone-frame-shell {
+            width: min(90vw, 480px) !important;
+            height: min(92vh, 900px) !important;
+            border-radius: 36px !important;
+            padding: 10px !important;
+          }
         }
       `}</style>
     </div>

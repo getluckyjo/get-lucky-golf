@@ -152,7 +152,7 @@ export default function AdminNewCoursePage() {
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '10px 20px', borderRadius: 8, border: 'none',
-                background: '#00432a', color: '#fff', fontSize: 14,
+                background: '#007728', color: '#fff', fontSize: 14,
                 cursor: saving ? 'not-allowed' : 'pointer', fontWeight: 600,
                 opacity: saving ? 0.7 : 1,
               }}

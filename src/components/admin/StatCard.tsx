@@ -10,7 +10,7 @@ interface StatCardProps {
   subtitle?: string
 }
 
-export default function StatCard({ title, value, icon: Icon, accent = '#00432a', subtitle }: StatCardProps) {
+export default function StatCard({ title, value, icon: Icon, accent = '#007728', subtitle }: StatCardProps) {
   return (
     <div
       style={{

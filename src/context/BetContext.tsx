@@ -2,6 +2,11 @@
 
 import { createContext, useContext, useState, ReactNode } from 'react'
 
+// Re-export shared tier definitions so existing client imports keep working
+export { BET_TIERS } from '@/lib/tiers'
+export type { BetTier, BetTierData } from '@/lib/tiers'
+import type { BetTier } from '@/lib/tiers'
+
 export interface Course {
   id: string
   name: string
@@ -18,24 +23,7 @@ export interface Hole {
   distanceMetres: number
 }
 
-export type BetTier = 'tier_1' | 'tier_2' | 'tier_3' | 'tier_4' | 'tier_5'
-
-export interface BetTierData {
-  tier: BetTier
-  stakeZAR: number
-  winZAR: number
-  multiplier: number
-  label: string
-  isPopular: boolean
-}
-
-export const BET_TIERS: BetTierData[] = [
-  { tier: 'tier_1', stakeZAR: 50,   winZAR: 25000,   multiplier: 500,  label: 'R50 → R25,000',       isPopular: false },
-  { tier: 'tier_2', stakeZAR: 100,  winZAR: 60000,   multiplier: 600,  label: 'R100 → R60,000',      isPopular: true  },
-  { tier: 'tier_3', stakeZAR: 250,  winZAR: 200000,  multiplier: 800,  label: 'R250 → R200,000',     isPopular: false },
-  { tier: 'tier_4', stakeZAR: 500,  winZAR: 500000,  multiplier: 1000, label: 'R500 → R500,000',     isPopular: false },
-  { tier: 'tier_5', stakeZAR: 1000, winZAR: 1000000, multiplier: 1000, label: 'R1,000 → R1,000,000', isPopular: false },
-]
+type UploadStatus = 'idle' | 'uploading' | 'done' | 'error'
 
 interface BetSession {
   selectedCourse: Course | null
@@ -46,6 +34,8 @@ interface BetSession {
   videoBlob: Blob | null
   videoUploadPath: string | null
   declaredResult: 'hole_in_one' | 'miss' | null
+  uploadStatus: UploadStatus
+  uploadProgress: number // 0–100
 }
 
 interface BetContextType extends BetSession {
@@ -57,6 +47,7 @@ interface BetContextType extends BetSession {
   setVideoUploadPath: (path: string) => void
   declareResult: (result: 'hole_in_one' | 'miss') => void
   resetSession: () => void
+  startBackgroundUpload: (blob: Blob, mimeType: string) => void
 }
 
 const defaultSession: BetSession = {
@@ -68,6 +59,8 @@ const defaultSession: BetSession = {
   videoBlob: null,
   videoUploadPath: null,
   declaredResult: null,
+  uploadStatus: 'idle',
+  uploadProgress: 0,
 }
 
 const BetContext = createContext<BetContextType | null>(null)
@@ -100,6 +93,45 @@ export function BetProvider({ children }: { children: ReactNode }) {
     setSession(defaultSession)
   }
 
+  function startBackgroundUpload(blob: Blob, mimeType: string) {
+    setSession(s => ({ ...s, uploadStatus: 'uploading', uploadProgress: 0 }))
+
+    // Fire-and-forget — upload runs in the background
+    ;(async () => {
+      try {
+        const urlRes = await fetch('/api/videos/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ betId: session.betId ?? 'mock', mimeType }),
+        })
+        const { signedUrl } = await urlRes.json()
+
+        if (signedUrl) {
+          await new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest()
+            xhr.open('PUT', signedUrl)
+            xhr.setRequestHeader('Content-Type', mimeType)
+            xhr.upload.onprogress = (e) => {
+              if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 100)
+                setSession(s => ({ ...s, uploadProgress: pct }))
+              }
+            }
+            xhr.onload = () =>
+              xhr.status < 300 ? resolve() : reject(new Error(`Upload ${xhr.status}`))
+            xhr.onerror = () => reject(new Error('Network error'))
+            xhr.send(blob)
+          })
+        }
+
+        setSession(s => ({ ...s, uploadStatus: 'done', uploadProgress: 100 }))
+      } catch (err) {
+        console.error('[upload] Background upload failed:', err)
+        setSession(s => ({ ...s, uploadStatus: 'error' }))
+      }
+    })()
+  }
+
   return (
     <BetContext.Provider
       value={{
@@ -112,6 +144,7 @@ export function BetProvider({ children }: { children: ReactNode }) {
         setVideoUploadPath,
         declareResult,
         resetSession,
+        startBackgroundUpload,
       }}
     >
       {children}

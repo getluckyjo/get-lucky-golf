@@ -100,7 +100,7 @@ export default function HistoryPage() {
         {/* Header */}
         <div className="history-header">
           <div className="history-title">My Bets</div>
-          <div style={{ fontSize: 13, color: 'var(--gray-light)', fontWeight: 600 }}>
+          <div style={{ fontSize: 'var(--text-body)', color: 'var(--gray-light)', fontWeight: 600 }}>
             {loading ? '—' : allBets.length} total
           </div>
         </div>

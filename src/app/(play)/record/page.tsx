@@ -9,12 +9,11 @@ const MAX_SECONDS = 120 // 2 minutes max
 
 export default function RecordPage() {
   const router = useRouter()
-  const { selectedCourse, selectedHole, setVideoBlob, betId } = useBet()
+  const { selectedCourse, selectedHole, setVideoBlob, startBackgroundUpload } = useBet()
   const [isRecording, setIsRecording] = useState(false)
   const [seconds, setSeconds] = useState(0)
   const [cameraReady, setCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState(false)
-  const [uploading, setUploading] = useState(false)
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -69,32 +68,11 @@ export default function RecordPage() {
     }
   }, [])
 
-  const handleRecordingComplete = useCallback(async (blob: Blob, mimeType: string) => {
-    setUploading(true)
-
-    try {
-      const urlRes = await fetch('/api/videos/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ betId: betId ?? 'mock', mimeType }),
-      })
-      const { signedUrl } = await urlRes.json()
-
-      if (signedUrl) {
-        await fetch(signedUrl, {
-          method: 'PUT',
-          body: blob,
-          headers: { 'Content-Type': mimeType },
-        })
-      }
-    } catch {
-      // Non-critical — proceed
-    }
-
-    setUploading(false)
+  const handleRecordingComplete = useCallback((blob: Blob, mimeType: string) => {
     setVideoBlob(blob)
+    startBackgroundUpload(blob, mimeType) // runs in background — doesn't block
     router.push('/confirm')
-  }, [betId, setVideoBlob, router])
+  }, [setVideoBlob, startBackgroundUpload, router])
 
   function startRecording() {
     if (!streamRef.current) {
@@ -117,14 +95,17 @@ export default function RecordPage() {
     mimeTypeRef.current = mimeType
     chunksRef.current = []
 
-    const mr = new MediaRecorder(streamRef.current, { mimeType })
+    const mr = new MediaRecorder(streamRef.current, {
+      mimeType,
+      videoBitsPerSecond: 1_500_000, // 1.5 Mbps — ~22 MB for 2 min at 720p
+    })
     mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
     mr.onstop = () => {
       const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
       streamRef.current?.getTracks().forEach(t => t.stop())
       handleRecordingComplete(blob, mimeTypeRef.current)
     }
-    mr.start(100)
+    mr.start(1000) // 1s chunks — less overhead than 100ms
     mediaRecorderRef.current = mr
     setIsRecording(true)
     setSeconds(0)
@@ -182,10 +163,10 @@ export default function RecordPage() {
         <button
           onClick={handleCancel}
           style={{
-            position: 'absolute', top: 24, left: 24, zIndex: 10,
+            position: 'absolute', top: 'var(--page-px)', left: 'var(--page-px)', zIndex: 10,
             width: 36, height: 36, background: 'rgba(255,255,255,0.15)',
             border: 'none', borderRadius: '50%', color: 'white',
-            fontSize: 16, cursor: 'pointer',
+            fontSize: 'var(--text-md)', cursor: 'pointer',
           }}
         >
           ✕
@@ -193,7 +174,7 @@ export default function RecordPage() {
 
         {cameraError && (
           <div style={{
-            position: 'absolute', top: 24, right: 24, zIndex: 10, fontSize: 10,
+            position: 'absolute', top: 'var(--page-px)', right: 'var(--page-px)', zIndex: 10, fontSize: 'var(--text-xs)',
             background: 'rgba(0,0,0,0.5)', color: '#ffd', padding: '4px 8px', borderRadius: 6,
           }}>
             SIMULATED
@@ -214,7 +195,7 @@ export default function RecordPage() {
         </div>
 
         {/* Tap-to-record hint — shown only when idle and ready */}
-        {!isRecording && !uploading && cameraReady && (
+        {!isRecording && cameraReady && (
           <div style={{
             position: 'absolute', bottom: 138, left: 0, right: 0,
             textAlign: 'center', zIndex: 10,
@@ -223,7 +204,7 @@ export default function RecordPage() {
               display: 'inline-block',
               background: 'rgba(0,0,0,0.45)',
               color: 'rgba(255,255,255,0.9)',
-              fontSize: 13, fontWeight: 600,
+              fontSize: 'var(--text-body)', fontWeight: 600,
               padding: '6px 18px', borderRadius: 20,
               letterSpacing: '0.02em',
             }}>
@@ -232,39 +213,13 @@ export default function RecordPage() {
           </div>
         )}
 
-        {/* Uploading label */}
-        {uploading && (
-          <div style={{
-            position: 'absolute', bottom: 138, left: 0, right: 0,
-            textAlign: 'center', zIndex: 10,
-          }}>
-            <div style={{
-              display: 'inline-block',
-              background: 'rgba(0,0,0,0.55)',
-              color: 'rgba(255,255,255,0.9)',
-              fontSize: 13, fontWeight: 600,
-              padding: '6px 18px', borderRadius: 20,
-            }}>
-              Uploading…
-            </div>
-          </div>
-        )}
-
         <div className="record-controls">
           <button
             className={`record-btn-main${isRecording ? ' recording' : ''}`}
             onClick={isRecording ? stopRecording : startRecording}
-            disabled={!cameraReady || uploading}
+            disabled={!cameraReady}
           >
-            {uploading ? (
-              <div style={{
-                width: 20, height: 20, border: '2px solid white',
-                borderTopColor: 'transparent', borderRadius: '50%',
-                animation: 'spin 0.6s linear infinite',
-              }} />
-            ) : (
-              <div className="record-btn-main-inner" />
-            )}
+            <div className="record-btn-main-inner" />
           </button>
         </div>
       </div>

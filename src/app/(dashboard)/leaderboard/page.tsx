@@ -114,18 +114,18 @@ export default function LeaderboardPage() {
           {user && (
             <div className="lb-you-banner">
               <div style={{
-                width: 36, height: 36, borderRadius: '50%',
+                width: 'clamp(32px, 9vw, 36px)', height: 'clamp(32px, 9vw, 36px)', borderRadius: '50%',
                 background: 'linear-gradient(135deg, var(--green-mid), var(--green-deep))',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 13, fontWeight: 700, color: 'white', flexShrink: 0,
+                fontSize: 'var(--text-body)', fontWeight: 700, color: 'white', flexShrink: 0,
               }}>
                 {userInitials}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--green-deep)' }}>
+                <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--green-deep)' }}>
                   {firstName} (You)
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--gray-light)', marginTop: 1 }}>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-light)', marginTop: 1 }}>
                   Play your first round to appear on the leaderboard!
                 </div>
               </div>
@@ -133,8 +133,8 @@ export default function LeaderboardPage() {
                 onClick={() => router.push('/select-course')}
                 style={{
                   padding: '7px 12px', background: 'var(--green-deep)',
-                  border: 'none', borderRadius: 8, color: 'white',
-                  fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                  border: 'none', borderRadius: 'var(--radius-sm)', color: 'white',
+                  fontSize: 'var(--text-xs)', fontWeight: 700, cursor: 'pointer', flexShrink: 0,
                 }}
               >
                 Play →
@@ -158,7 +158,7 @@ export default function LeaderboardPage() {
           {/* Footer note */}
           <div style={{
             textAlign: 'center', padding: '4px 0 8px',
-            fontSize: 11, color: 'var(--gray-light)',
+            fontSize: 'var(--text-xs)', color: 'var(--gray-light)',
           }}>
             All prizes independently verified · Updated daily
           </div>
