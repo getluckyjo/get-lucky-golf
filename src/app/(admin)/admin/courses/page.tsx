@@ -59,7 +59,7 @@ export default function AdminCoursesPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4 }}>Course Management</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Course Management</h1>
           <p style={{ fontSize: 14, color: '#666' }}>Manage golf courses and their par-3 holes</p>
         </div>
         <button
@@ -119,7 +119,7 @@ export default function AdminCoursesPage() {
               <tr><td colSpan={7} style={{ padding: 40, textAlign: 'center', color: '#999' }}>No courses found</td></tr>
             ) : (
               data.map((course) => (
-                <tr key={course.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <tr key={course.id} className="admin-tr" style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '12px 14px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <MapPin size={16} color="#007728" />

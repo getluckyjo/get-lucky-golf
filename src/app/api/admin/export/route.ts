@@ -28,7 +28,7 @@ export async function POST(request: Request) {
       if (auth.isMock || !auth.adminClient) {
         csv = toCSV(
           ['ID', 'User', 'Course', 'Hole', 'Tier', 'Stake (cents)', 'Potential Win (cents)', 'Status', 'Declared Result', 'Created'],
-          MOCK_ADMIN_BETS.map(b => [b.id, b.userName ?? '', b.courseName, String(b.holeNumber), b.tier, String(b.stakePence), String(b.potentialWinPence), b.status, b.declaredResult ?? '', b.createdAt])
+          MOCK_ADMIN_BETS.map(b => [b.id, b.userName ?? '', b.courseName, String(b.holeNumber), b.tier, String(b.stakeCents), String(b.potentialWinCents), b.status, b.declaredResult ?? '', b.createdAt])
         )
       } else {
         const { data } = await auth.adminClient
@@ -62,7 +62,7 @@ export async function POST(request: Request) {
       if (auth.isMock || !auth.adminClient) {
         csv = toCSV(
           ['ID', 'Bet ID', 'User', 'Course', 'Hole', 'Tier', 'Potential Win (cents)', 'Status', 'Submitted', 'Docs Received', 'Verified'],
-          MOCK_ADMIN_VERIFICATIONS.map(v => [v.id, v.betId, v.userName ?? '', v.courseName, String(v.holeNumber), v.tier, String(v.potentialWinPence), v.status, v.createdAt, v.documentsReceivedAt ?? '', v.verifiedAt ?? ''])
+          MOCK_ADMIN_VERIFICATIONS.map(v => [v.id, v.betId, v.userName ?? '', v.courseName, String(v.holeNumber), v.tier, String(v.potentialWinCents), v.status, v.createdAt, v.documentsReceivedAt ?? '', v.verifiedAt ?? ''])
         )
       } else {
         const { data } = await auth.adminClient

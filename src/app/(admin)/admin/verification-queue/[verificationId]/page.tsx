@@ -8,7 +8,7 @@ import VideoPlayer from '@/components/admin/VideoPlayer'
 import DocumentViewer from '@/components/admin/DocumentViewer'
 import ConfirmModal from '@/components/admin/ConfirmModal'
 import { formatZAR, timeAgo } from '@/lib/admin-mock-data'
-import { TIER_LABELS } from '@/types/admin'
+import { TIER_LABELS } from '@/lib/tiers'
 import type { VerificationDetail } from '@/types/admin'
 
 const TIMELINE_STAGES = [
@@ -32,7 +32,7 @@ export default function VerificationDetailPage() {
 
   useEffect(() => {
     fetch(`/api/admin/verifications/${verificationId}`)
-      .then(r => r.json())
+      .then(r => { if (!r.ok) throw new Error('Not found'); return r.json() })
       .then(data => {
         setDetail(data)
         setNotes(data.reviewerNotes || '')
@@ -64,8 +64,28 @@ export default function VerificationDetailPage() {
 
   if (loading) {
     return (
-      <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>
-        Loading claim details...
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <div style={{ width: 70, height: 32, background: '#e5e5e5', borderRadius: 6 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ width: '40%', height: 20, background: '#e5e5e5', borderRadius: 4, marginBottom: 8 }} />
+            <div style={{ width: '25%', height: 14, background: '#f0f0f0', borderRadius: 4 }} />
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', padding: 20 }}>
+              <div style={{ width: '30%', height: 14, background: '#f0f0f0', borderRadius: 4, marginBottom: 12 }} />
+              <div style={{ width: '100%', aspectRatio: '9/16', maxHeight: 300, background: '#f0f0f0', borderRadius: 12 }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', padding: 20, height: 200 }}>
+              <div style={{ width: '30%', height: 14, background: '#f0f0f0', borderRadius: 4, marginBottom: 16 }} />
+              {[1,2,3].map(i => <div key={i} style={{ width: '80%', height: 14, background: '#f0f0f0', borderRadius: 4, marginBottom: 12 }} />)}
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
@@ -101,7 +121,12 @@ export default function VerificationDetailPage() {
           <ArrowLeft size={16} /> Back
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111', margin: 0 }}>
+          <div style={{ fontSize: 12, color: '#999', marginBottom: 2 }}>
+            <span style={{ cursor: 'pointer', color: '#007728' }} onClick={() => router.push('/admin/verification-queue')}>Verification Queue</span>
+            <span style={{ margin: '0 6px' }}>/</span>
+            <span>Claim Review</span>
+          </div>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111', margin: 0, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>
             Claim Review — {detail.userName || 'Unknown'}
           </h1>
           <p style={{ fontSize: 13, color: '#666', margin: 0 }}>
@@ -142,6 +167,12 @@ export default function VerificationDetailPage() {
                 <div>
                   <div style={{ fontSize: 13, color: '#999' }}>Claimant</div>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#111' }}>{detail.userName || 'Unknown'}</div>
+                  <button
+                    onClick={() => router.push(`/admin/users/${detail.userId}`)}
+                    style={{ fontSize: 12, color: '#007728', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+                  >
+                    View profile
+                  </button>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -155,8 +186,8 @@ export default function VerificationDetailPage() {
                 <Trophy size={16} color="#666" />
                 <div>
                   <div style={{ fontSize: 13, color: '#999' }}>Potential Payout</div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#007728' }}>{formatZAR(detail.potentialWinPence)}</div>
-                  <div style={{ fontSize: 12, color: '#999' }}>Stake: {formatZAR(detail.stakePence)}</div>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#007728' }}>{formatZAR(detail.potentialWinCents)}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>Stake: {formatZAR(detail.stakeCents)}</div>
                 </div>
               </div>
               <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: 14 }}>
@@ -186,7 +217,7 @@ export default function VerificationDetailPage() {
                   >
                     <span style={{ color: '#666' }}>{bet.courseName}, H{bet.holeNumber}</span>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                      <span style={{ color: '#111', fontWeight: 500 }}>{formatZAR(bet.stakePence)}</span>
+                      <span style={{ color: '#111', fontWeight: 500 }}>{formatZAR(bet.stakeCents)}</span>
                       <StatusBadge status={bet.status} small />
                     </div>
                   </div>
@@ -310,7 +341,7 @@ export default function VerificationDetailPage() {
       <ConfirmModal
         open={confirmAction === 'approve'}
         title="Approve This Claim"
-        message={`This will verify the hole-in-one claim and authorize a payout of ${formatZAR(detail.potentialWinPence)} to ${detail.userName}. This action moves the bet to "verified" status.`}
+        message={`This will verify the hole-in-one claim and authorize a payout of ${formatZAR(detail.potentialWinCents)} to ${detail.userName}. This action moves the bet to "verified" status.`}
         confirmLabel="Approve & Verify"
         variant="success"
         onConfirm={() => handleAction('approve')}
@@ -319,7 +350,7 @@ export default function VerificationDetailPage() {
       <ConfirmModal
         open={confirmAction === 'reject'}
         title="Reject This Claim"
-        message={`This will reject ${detail.userName}'s claim for ${formatZAR(detail.potentialWinPence)}. The bet will remain as "claimed" and no payout will be issued.`}
+        message={`This will reject ${detail.userName}'s claim for ${formatZAR(detail.potentialWinCents)}. The bet will remain as "claimed" and no payout will be issued.`}
         confirmLabel="Reject Claim"
         variant="danger"
         onConfirm={() => handleAction('reject')}

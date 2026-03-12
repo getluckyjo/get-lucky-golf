@@ -71,7 +71,7 @@ export default function AdminNewCoursePage() {
         >
           <ArrowLeft size={16} /> Back
         </button>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111' }}>Add New Course</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111', fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Add New Course</h1>
       </div>
 
       <form onSubmit={handleSubmit}>

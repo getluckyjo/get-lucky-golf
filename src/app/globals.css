@@ -1273,3 +1273,11 @@ img.course-thumb { object-fit: cover; }
     --phone-h: min(92vh, 900px);
   }
 }
+
+/* ── ADMIN TABLE STYLES ── */
+.admin-tr {
+  transition: background 0.1s ease;
+}
+.admin-tr:hover {
+  background: #f8f9fa !important;
+}

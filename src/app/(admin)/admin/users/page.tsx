@@ -58,7 +58,7 @@ export default function AdminUsersPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4 }}>User Management</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>User Management</h1>
           <p style={{ fontSize: 14, color: '#666' }}>View and manage all registered users</p>
         </div>
         <button
@@ -125,6 +125,7 @@ export default function AdminUsersPage() {
               data.map((user) => (
                 <tr
                   key={user.id}
+                  className="admin-tr"
                   style={{ borderBottom: '1px solid #f0f0f0', cursor: 'pointer' }}
                   onClick={() => router.push(`/admin/users/${user.id}`)}
                 >

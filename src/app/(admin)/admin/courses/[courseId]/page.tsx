@@ -17,6 +17,7 @@ export default function AdminEditCoursePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [saved, setSaved] = useState(false)
   const [newHole, setNewHole] = useState({ hole_number: '', par: '3', distance_metres: '' })
   const [addingHole, setAddingHole] = useState(false)
 
@@ -50,6 +51,10 @@ export default function AdminEditCoursePage() {
       })
       const data = await res.json()
       if (!data.success) setError(data.error || 'Save failed')
+      else {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 2500)
+      }
     } catch {
       setError('Save failed')
     } finally {
@@ -94,7 +99,16 @@ export default function AdminEditCoursePage() {
     setHoles(holes.filter(h => h.id !== holeId))
   }
 
-  if (loading) return <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>Loading...</div>
+  if (loading) return (
+    <div style={{ maxWidth: 800 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <div style={{ width: 70, height: 32, background: '#e5e5e5', borderRadius: 6 }} />
+        <div style={{ width: '30%', height: 20, background: '#e5e5e5', borderRadius: 4 }} />
+      </div>
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', padding: 24, marginBottom: 24, height: 280 }} />
+      <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', padding: 24, height: 200 }} />
+    </div>
+  )
   if (!course) return <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>Course not found</div>
 
   const inputStyle = {
@@ -120,7 +134,7 @@ export default function AdminEditCoursePage() {
         >
           <ArrowLeft size={16} /> Back
         </button>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111' }}>Edit: {course.name}</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111', fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Edit: {course.name}</h1>
       </div>
 
       {/* Course details form */}
@@ -151,6 +165,12 @@ export default function AdminEditCoursePage() {
         </div>
 
         {error && <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, background: '#fde8e8', color: '#c0392b', fontSize: 13 }}>{error}</div>}
+
+        {saved && (
+          <div style={{ marginTop: 12, padding: '8px 12px', borderRadius: 6, background: '#e6f4ea', color: '#1a7f37', fontSize: 13, fontWeight: 500 }}>
+            Changes saved successfully
+          </div>
+        )}
 
         <div style={{ marginTop: 16, display: 'flex', justifyContent: 'flex-end' }}>
           <button

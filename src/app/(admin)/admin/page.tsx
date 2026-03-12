@@ -6,7 +6,7 @@ import { DollarSign, Ticket, ClipboardCheck, Trophy, Users, ArrowRight } from 'l
 import StatCard from '@/components/admin/StatCard'
 import StatusBadge from '@/components/admin/StatusBadge'
 import { formatZAR, timeAgo } from '@/lib/admin-mock-data'
-import { TIER_LABELS } from '@/types/admin'
+import { TIER_LABELS } from '@/lib/tiers'
 import type { AdminStats } from '@/types/admin'
 
 export default function AdminDashboardPage() {
@@ -25,7 +25,7 @@ export default function AdminDashboardPage() {
   if (loading) {
     return (
       <div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 24 }}>Dashboard</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 24, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Dashboard</h1>
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} style={{ flex: 1, minWidth: 200, height: 100, background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5' }} />
@@ -39,7 +39,7 @@ export default function AdminDashboardPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4 }}>Dashboard</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Dashboard</h1>
           <p style={{ fontSize: 14, color: '#666' }}>Overview of your Get Lucky platform</p>
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
           value={formatZAR(stats?.totalRevenue ?? 0)}
           icon={DollarSign}
           accent="#007728"
-          subtitle={`${stats?.totalBets ?? 0} total bets`}
+          subtitle={`${stats?.totalBets ?? 0} bets via PayFast`}
         />
         <StatCard
           title="Active Bets"
@@ -71,6 +71,7 @@ export default function AdminDashboardPage() {
           value={formatZAR(stats?.totalPayouts ?? 0)}
           icon={Trophy}
           accent="#b8860b"
+          subtitle="Processed via PayFast"
         />
         <StatCard
           title="Total Users"
@@ -232,7 +233,7 @@ export default function AdminDashboardPage() {
                 >
                   <div>
                     <div style={{ fontWeight: 500, color: '#111' }}>{v.userName || 'Unknown'}</div>
-                    <div style={{ fontSize: 12, color: '#999' }}>{v.courseName} · {formatZAR(v.potentialWinPence)}</div>
+                    <div style={{ fontSize: 12, color: '#999' }}>{v.courseName} · {formatZAR(v.potentialWinCents)}</div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <StatusBadge status={v.status} small />

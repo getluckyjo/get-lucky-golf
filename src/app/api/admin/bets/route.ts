@@ -37,8 +37,8 @@ export async function GET(request: Request) {
       if (dateTo) filtered = filtered.filter(b => b.createdAt <= dateTo)
 
       filtered.sort((a, b) => {
-        const aVal = sort === 'stake_pence' ? a.stakePence : new Date(a.createdAt).getTime()
-        const bVal = sort === 'stake_pence' ? b.stakePence : new Date(b.createdAt).getTime()
+        const aVal = sort === 'stake_pence' ? a.stakeCents : new Date(a.createdAt).getTime()
+        const bVal = sort === 'stake_pence' ? b.stakeCents : new Date(b.createdAt).getTime()
         return order === 'asc' ? aVal - bVal : bVal - aVal
       })
 
@@ -78,8 +78,8 @@ export async function GET(request: Request) {
       userId: b.user_id,
       userName: b.profiles?.name,
       tier: b.tier,
-      stakePence: b.stake_pence,
-      potentialWinPence: b.potential_win_pence,
+      stakeCents: b.stake_pence,
+      potentialWinCents: b.potential_win_pence,
       status: b.status,
       declaredResult: b.declared_result,
       declaredAt: b.declared_at,

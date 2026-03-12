@@ -21,3 +21,20 @@ export const BET_TIERS: BetTierData[] = [
   { tier: 'tier_4', stakeZAR: 500,  winZAR: 500000,  multiplier: 1000, label: 'R500 → R500,000',     isPopular: false },
   { tier: 'tier_5', stakeZAR: 1000, winZAR: 1000000, multiplier: 1000, label: 'R1,000 → R1,000,000', isPopular: false },
 ]
+
+// ── Derived maps for admin / API use ──
+
+/** Map of tier key → display label */
+export const TIER_LABELS: Record<BetTier, string> = Object.fromEntries(
+  BET_TIERS.map(t => [t.tier, t.label]),
+) as Record<BetTier, string>
+
+/** Map of tier key → stake in ZAR cents */
+export const TIER_STAKE_CENTS: Record<BetTier, number> = Object.fromEntries(
+  BET_TIERS.map(t => [t.tier, t.stakeZAR * 100]),
+) as Record<BetTier, number>
+
+/** Map of tier key → potential win in ZAR cents */
+export const TIER_WIN_CENTS: Record<BetTier, number> = Object.fromEntries(
+  BET_TIERS.map(t => [t.tier, t.winZAR * 100]),
+) as Record<BetTier, number>

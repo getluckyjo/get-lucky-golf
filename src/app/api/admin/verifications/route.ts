@@ -22,7 +22,7 @@ export async function GET(request: Request) {
 
       if (sort === 'oldest') filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
       else if (sort === 'newest') filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      else if (sort === 'highest') filtered.sort((a, b) => b.potentialWinPence - a.potentialWinPence)
+      else if (sort === 'highest') filtered.sort((a, b) => b.potentialWinCents - a.potentialWinCents)
 
       const total = filtered.length
       const start = (page - 1) * limit
@@ -89,8 +89,8 @@ export async function GET(request: Request) {
       betId: row.bet_id,
       status: row.status,
       tier: row.bets?.tier,
-      stakePence: row.bets?.stake_pence,
-      potentialWinPence: row.bets?.potential_win_pence,
+      stakeCents: row.bets?.stake_pence,
+      potentialWinCents: row.bets?.potential_win_pence,
       videoUrl: row.bets?.video_url,
       certificatePath: row.certificate_path,
       affidavitPath: row.affidavit_path,

@@ -8,7 +8,7 @@ import Pagination from '@/components/admin/Pagination'
 import ConfirmModal from '@/components/admin/ConfirmModal'
 import { formatZAR, timeAgo } from '@/lib/admin-mock-data'
 import type { VerificationQueueItem, PaginatedResponse, VerificationStatus } from '@/types/admin'
-import { TIER_LABELS } from '@/types/admin'
+import { TIER_LABELS } from '@/lib/tiers'
 
 const PIPELINE_STAGES: { status: VerificationStatus; label: string; color: string }[] = [
   { status: 'pending', label: 'Pending', color: '#f59e0b' },
@@ -100,7 +100,7 @@ export default function VerificationQueuePage() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4 }}>Verification Queue</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Verification Queue</h1>
         <p style={{ fontSize: 14, color: '#666' }}>Review and process hole-in-one claims</p>
       </div>
 
@@ -283,6 +283,7 @@ export default function VerificationQueuePage() {
               data.map((item) => (
                 <tr
                   key={item.id}
+                  className="admin-tr"
                   style={{
                     borderBottom: '1px solid #f0f0f0',
                     background: selected.has(item.id) ? '#f0f7ff' : undefined,
@@ -313,7 +314,7 @@ export default function VerificationQueuePage() {
                     </span>
                   </td>
                   <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 600, color: '#111' }}>
-                    {formatZAR(item.potentialWinPence)}
+                    {formatZAR(item.potentialWinCents)}
                   </td>
                   <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                     <StatusBadge status={item.status} small />

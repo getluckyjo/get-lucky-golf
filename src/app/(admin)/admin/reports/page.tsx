@@ -23,7 +23,7 @@ interface PayoutItem {
   courseName: string
   holeNumber: number
   tier: string
-  potentialWinPence: number
+  potentialWinCents: number
   status: string
   createdAt: string
 }
@@ -73,7 +73,7 @@ export default function AdminReportsPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4 }}>Financial Reports</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Financial Reports</h1>
           <p style={{ fontSize: 14, color: '#666' }}>Revenue, payouts, and profit analysis</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
@@ -102,8 +102,8 @@ export default function AdminReportsPage() {
 
       {/* KPI cards */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 24 }}>
-        <StatCard title="Total Revenue" value={formatZAR(revenue?.totalRevenue ?? 0)} icon={DollarSign} accent="#007728" subtitle={`${revenue?.totalBets ?? 0} bets`} />
-        <StatCard title="Total Payouts" value={formatZAR(revenue?.totalPayouts ?? 0)} icon={Trophy} accent="#c0392b" />
+        <StatCard title="Total Revenue" value={formatZAR(revenue?.totalRevenue ?? 0)} icon={DollarSign} accent="#007728" subtitle={`${revenue?.totalBets ?? 0} bets via PayFast`} />
+        <StatCard title="Total Payouts" value={formatZAR(revenue?.totalPayouts ?? 0)} icon={Trophy} accent="#c0392b" subtitle="Processed via PayFast" />
         <StatCard title="Net Profit" value={formatZAR(revenue?.netProfit ?? 0)} icon={TrendingUp} accent={(revenue?.netProfit ?? 0) >= 0 ? '#1a7f37' : '#c0392b'} subtitle={`${revenue?.margin ?? '0'}% margin`} />
         <StatCard title="Total Bets" value={String(revenue?.totalBets ?? 0)} icon={BarChart3} accent="#1565c0" />
       </div>
@@ -210,11 +210,11 @@ export default function AdminReportsPage() {
                   <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: '#999' }}>No payouts yet</td></tr>
                 ) : (
                   payouts.map((p) => (
-                    <tr key={p.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                    <tr key={p.id} className="admin-tr" style={{ borderBottom: '1px solid #f0f0f0' }}>
                       <td style={{ padding: '12px 14px', fontWeight: 500, color: '#111' }}>{p.userName || 'Unknown'}</td>
                       <td style={{ padding: '12px 14px', color: '#666' }}>{p.courseName}, H{p.holeNumber}</td>
                       <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 700, color: '#1a7f37' }}>
-                        {formatZAR(p.potentialWinPence)}
+                        {formatZAR(p.potentialWinCents)}
                       </td>
                       <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                         <StatusBadge status={p.status} small />

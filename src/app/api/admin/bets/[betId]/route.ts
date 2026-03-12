@@ -32,8 +32,8 @@ export async function GET(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       userName: (data as any).profiles?.name,
       tier: data.tier,
-      stakePence: data.stake_pence,
-      potentialWinPence: data.potential_win_pence,
+      stakeCents: data.stake_pence,
+      potentialWinCents: data.potential_win_pence,
       status: data.status,
       declaredResult: data.declared_result,
       declaredAt: data.declared_at,

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/admin-auth'
 import { MOCK_ADMIN_BETS } from '@/lib/admin-mock-data'
-import { TIER_LABELS } from '@/types/admin'
+import { TIER_LABELS } from '@/lib/tiers'
 
 export async function GET() {
   try {
@@ -18,8 +18,8 @@ export async function GET() {
           tier,
           label,
           count: tierBets.length,
-          revenue: tierBets.reduce((s, b) => s + b.stakePence, 0),
-          payouts: tierBets.filter(b => b.status === 'paid' || b.status === 'verified').reduce((s, b) => s + b.potentialWinPence, 0),
+          revenue: tierBets.reduce((s, b) => s + b.stakeCents, 0),
+          payouts: tierBets.filter(b => b.status === 'paid' || b.status === 'verified').reduce((s, b) => s + b.potentialWinCents, 0),
         }
       })
 
@@ -27,14 +27,14 @@ export async function GET() {
       const courseMap = new Map<string, { name: string; revenue: number; count: number }>()
       bets.forEach(b => {
         const existing = courseMap.get(b.courseName) || { name: b.courseName, revenue: 0, count: 0 }
-        existing.revenue += b.stakePence
+        existing.revenue += b.stakeCents
         existing.count += 1
         courseMap.set(b.courseName, existing)
       })
       const byCourse = Array.from(courseMap.values()).sort((a, b) => b.revenue - a.revenue)
 
-      const totalRevenue = bets.reduce((s, b) => s + b.stakePence, 0)
-      const totalPayouts = bets.filter(b => b.status === 'paid' || b.status === 'verified').reduce((s, b) => s + b.potentialWinPence, 0)
+      const totalRevenue = bets.reduce((s, b) => s + b.stakeCents, 0)
+      const totalPayouts = bets.filter(b => b.status === 'paid' || b.status === 'verified').reduce((s, b) => s + b.potentialWinCents, 0)
 
       return NextResponse.json({
         totalRevenue,

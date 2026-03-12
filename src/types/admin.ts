@@ -1,5 +1,7 @@
 import type { Database } from './database'
+import type { BetTier } from '@/lib/tiers'
 
+export type { BetTier }
 export type BetRow = Database['public']['Tables']['bets']['Row']
 export type ProfileRow = Database['public']['Tables']['profiles']['Row']
 export type CourseRow = Database['public']['Tables']['courses']['Row']
@@ -7,7 +9,6 @@ export type HoleRow = Database['public']['Tables']['holes']['Row']
 export type VerificationRow = Database['public']['Tables']['verifications']['Row']
 export type VerificationStatus = VerificationRow['status']
 export type BetStatus = BetRow['status']
-export type BetTier = BetRow['tier']
 
 export interface AdminStats {
   totalRevenue: number
@@ -24,8 +25,8 @@ export interface VerificationQueueItem {
   betId: string
   status: VerificationStatus
   tier: BetTier
-  stakePence: number
-  potentialWinPence: number
+  stakeCents: number
+  potentialWinCents: number
   videoUrl: string | null
   certificatePath: string | null
   affidavitPath: string | null
@@ -55,8 +56,8 @@ export interface AdminBetRecord {
   userId: string
   userName: string | null
   tier: BetTier
-  stakePence: number
-  potentialWinPence: number
+  stakeCents: number
+  potentialWinCents: number
   status: BetStatus
   declaredResult: 'miss' | 'win' | null
   declaredAt: string | null
@@ -102,29 +103,4 @@ export interface BatchActionResult {
   id: string
   success: boolean
   error?: string
-}
-
-// Tier display helpers
-export const TIER_LABELS: Record<BetTier, string> = {
-  tier_1: 'R50 → R25,000',
-  tier_2: 'R100 → R60,000',
-  tier_3: 'R250 → R200,000',
-  tier_4: 'R500 → R500,000',
-  tier_5: 'R1,000 → R1,000,000',
-}
-
-export const TIER_STAKES: Record<BetTier, number> = {
-  tier_1: 5000,
-  tier_2: 10000,
-  tier_3: 25000,
-  tier_4: 50000,
-  tier_5: 100000,
-}
-
-export const TIER_WINS: Record<BetTier, number> = {
-  tier_1: 2500000,
-  tier_2: 6000000,
-  tier_3: 20000000,
-  tier_4: 50000000,
-  tier_5: 100000000,
 }

@@ -7,7 +7,7 @@ import StatCard from '@/components/admin/StatCard'
 import StatusBadge from '@/components/admin/StatusBadge'
 import ConfirmModal from '@/components/admin/ConfirmModal'
 import { formatZAR, timeAgo } from '@/lib/admin-mock-data'
-import { TIER_LABELS } from '@/types/admin'
+import { TIER_LABELS } from '@/lib/tiers'
 import type { AdminUserRecord, AdminBetRecord } from '@/types/admin'
 
 export default function AdminUserDetailPage() {
@@ -47,7 +47,21 @@ export default function AdminUserDetailPage() {
   }
 
   if (loading) {
-    return <div style={{ padding: 40, textAlign: 'center', color: '#999' }}>Loading user...</div>
+    return (
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <div style={{ width: 70, height: 32, background: '#e5e5e5', borderRadius: 6 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ width: '30%', height: 20, background: '#e5e5e5', borderRadius: 4, marginBottom: 8 }} />
+            <div style={{ width: '40%', height: 14, background: '#f0f0f0', borderRadius: 4 }} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
+          {[1,2,3,4].map(i => <div key={i} style={{ flex: 1, height: 90, background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5' }} />)}
+        </div>
+        <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', height: 300 }} />
+      </div>
+    )
   }
 
   if (!user) {
@@ -69,7 +83,7 @@ export default function AdminUserDetailPage() {
           <ArrowLeft size={16} /> Back
         </button>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111', margin: 0 }}>{user.name || 'Unknown User'}</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#111', margin: 0, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>{user.name || 'Unknown User'}{user.isAdmin && <span style={{ fontSize: 12, fontWeight: 600, color: '#007728', background: '#e6f4ea', padding: '2px 8px', borderRadius: 10, marginLeft: 8, verticalAlign: 'middle' }}>Admin</span>}</h1>
           <p style={{ fontSize: 13, color: '#666', margin: 0 }}>{user.email} · Member since {new Date(user.createdAt).toLocaleDateString('en-ZA')}</p>
         </div>
         {user.suspendedAt ? (
@@ -120,6 +134,19 @@ export default function AdminUserDetailPage() {
         <StatCard title="Handicap" value={user.handicap !== null ? String(user.handicap) : '—'} icon={User} accent="#2d9448" />
       </div>
 
+      {/* PayFast payment method */}
+      {user.paymentMethod && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#fff', borderRadius: 10, border: '1px solid #e5e5e5', marginBottom: 24 }}>
+          <CreditCard size={18} color="#007728" />
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: '#111' }}>
+              {user.paymentMethod === 'card' ? 'Credit/Debit Card' : user.paymentMethod === 'eft' ? 'EFT Bank Transfer' : user.paymentMethod === 'apple_pay' ? 'Apple Pay' : user.paymentMethod === 'google_pay' ? 'Google Pay' : user.paymentMethod}
+            </div>
+            <div style={{ fontSize: 12, color: '#999' }}>Processed via PayFast</div>
+          </div>
+        </div>
+      )}
+
       {/* Bet history */}
       <div style={{ background: '#fff', borderRadius: 12, border: '1px solid #e5e5e5', overflow: 'hidden' }}>
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e5e5' }}>
@@ -141,11 +168,11 @@ export default function AdminUserDetailPage() {
               <tr><td colSpan={6} style={{ padding: 30, textAlign: 'center', color: '#999' }}>No bets</td></tr>
             ) : (
               bets.map((bet) => (
-                <tr key={bet.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <tr key={bet.id} className="admin-tr" style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '10px 14px', color: '#111' }}>{bet.courseName}, H{bet.holeNumber}</td>
                   <td style={{ padding: '10px 14px', color: '#007728', fontWeight: 600, fontSize: 12 }}>{TIER_LABELS[bet.tier]}</td>
-                  <td style={{ padding: '10px 14px', textAlign: 'right', color: '#111' }}>{formatZAR(bet.stakePence)}</td>
-                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600, color: '#111' }}>{formatZAR(bet.potentialWinPence)}</td>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', color: '#111' }}>{formatZAR(bet.stakeCents)}</td>
+                  <td style={{ padding: '10px 14px', textAlign: 'right', fontWeight: 600, color: '#111' }}>{formatZAR(bet.potentialWinCents)}</td>
                   <td style={{ padding: '10px 14px', textAlign: 'center' }}><StatusBadge status={bet.status} small /></td>
                   <td style={{ padding: '10px 14px', textAlign: 'right', color: '#999', fontSize: 12 }}>{timeAgo(bet.createdAt)}</td>
                 </tr>

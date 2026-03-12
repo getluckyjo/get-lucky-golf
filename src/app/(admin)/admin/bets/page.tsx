@@ -6,7 +6,7 @@ import StatusBadge from '@/components/admin/StatusBadge'
 import SearchInput from '@/components/admin/SearchInput'
 import Pagination from '@/components/admin/Pagination'
 import { formatZAR, timeAgo } from '@/lib/admin-mock-data'
-import { TIER_LABELS } from '@/types/admin'
+import { TIER_LABELS } from '@/lib/tiers'
 import type { AdminBetRecord, PaginatedResponse } from '@/types/admin'
 
 export default function AdminBetsPage() {
@@ -59,7 +59,7 @@ export default function AdminBetsPage() {
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4 }}>Bet Management</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#111', marginBottom: 4, fontFamily: "'Poster Gothic', Georgia, sans-serif" }}>Bet Management</h1>
           <p style={{ fontSize: 14, color: '#666' }}>View and manage all bets on the platform</p>
         </div>
         <button
@@ -141,7 +141,7 @@ export default function AdminBetsPage() {
               </tr>
             ) : (
               data.map((bet) => (
-                <tr key={bet.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                <tr key={bet.id} className="admin-tr" style={{ borderBottom: '1px solid #f0f0f0' }}>
                   <td style={{ padding: '12px 14px', fontWeight: 500, color: '#111' }}>
                     {bet.userName || 'Unknown'}
                   </td>
@@ -152,10 +152,10 @@ export default function AdminBetsPage() {
                     {TIER_LABELS[bet.tier]}
                   </td>
                   <td style={{ padding: '12px 14px', textAlign: 'right', color: '#111' }}>
-                    {formatZAR(bet.stakePence)}
+                    {formatZAR(bet.stakeCents)}
                   </td>
                   <td style={{ padding: '12px 14px', textAlign: 'right', fontWeight: 600, color: '#111' }}>
-                    {formatZAR(bet.potentialWinPence)}
+                    {formatZAR(bet.potentialWinCents)}
                   </td>
                   <td style={{ padding: '12px 14px', textAlign: 'center' }}>
                     <StatusBadge status={bet.status} small />

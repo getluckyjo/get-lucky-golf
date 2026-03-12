@@ -14,6 +14,7 @@ export default function RecordPage() {
   const [seconds, setSeconds] = useState(0)
   const [cameraReady, setCameraReady] = useState(false)
   const [cameraError, setCameraError] = useState(false)
+  const [permissionState, setPermissionState] = useState<'checking' | 'prompt' | 'granted' | 'denied' | 'unsupported'>('checking')
 
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -33,40 +34,83 @@ export default function RecordPage() {
     return `${m}:${sec}`
   }
 
+  // Request camera access and attach stream
+  const requestCamera = useCallback(async () => {
+    setPermissionState('checking')
+    setCameraError(false)
+
+    // Check if getUserMedia is available at all
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setPermissionState('unsupported')
+      setCameraError(true)
+      setCameraReady(true)
+      return
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false,
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        videoRef.current.play().catch(() => {})
+      }
+      setPermissionState('granted')
+      setCameraReady(true)
+    } catch (err: unknown) {
+      const name = err instanceof DOMException ? err.name : ''
+      if (name === 'NotAllowedError') {
+        // User denied or dismissed the prompt — check if permanently denied
+        try {
+          const status = await navigator.permissions.query({ name: 'camera' as PermissionName })
+          setPermissionState(status.state === 'denied' ? 'denied' : 'prompt')
+        } catch {
+          // permissions.query not supported — assume prompt can be retried
+          setPermissionState('denied')
+        }
+      } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+        setPermissionState('unsupported')
+      } else {
+        setPermissionState('denied')
+      }
+      setCameraError(true)
+      setCameraReady(true)
+    }
+  }, [])
+
   // Start camera preview on mount
   useEffect(() => {
     let cancelled = false
 
-    async function initCamera() {
+    async function init() {
+      // Pre-check permission state if API is available
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-          audio: false,
-        })
-        if (cancelled) {
-          stream.getTracks().forEach(t => t.stop())
+        const status = await navigator.permissions.query({ name: 'camera' as PermissionName })
+        if (cancelled) return
+        if (status.state === 'denied') {
+          setPermissionState('denied')
+          setCameraError(true)
+          setCameraReady(true)
           return
         }
-        streamRef.current = stream
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream
-          videoRef.current.play().catch(() => {})
-        }
-        setCameraReady(true)
+        // 'granted' or 'prompt' — proceed to request
       } catch {
-        setCameraError(true)
-        setCameraReady(true) // Allow simulated recording
+        // permissions API not supported — just request directly
       }
+
+      if (!cancelled) requestCamera()
     }
 
-    initCamera()
+    init()
 
     return () => {
       cancelled = true
       streamRef.current?.getTracks().forEach(t => t.stop())
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [])
+  }, [requestCamera])
 
   const handleRecordingComplete = useCallback((blob: Blob, mimeType: string) => {
     setVideoBlob(blob)
@@ -75,16 +119,7 @@ export default function RecordPage() {
   }, [setVideoBlob, startBackgroundUpload, router])
 
   function startRecording() {
-    if (!streamRef.current) {
-      // Simulated recording (no camera)
-      setIsRecording(true)
-      setSeconds(0)
-      timerRef.current = setInterval(() => setSeconds(s => {
-        if (s + 1 >= MAX_SECONDS) { stopRecordingRef.current() }
-        return s + 1
-      }), 1000)
-      return
-    }
+    if (!streamRef.current) return // No camera — permission overlay handles this
 
     const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9')
       ? 'video/webm;codecs=vp9'
@@ -120,11 +155,6 @@ export default function RecordPage() {
 
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
       mediaRecorderRef.current.stop()
-    } else {
-      // Simulated: empty blob
-      const blob = new Blob([], { type: 'video/webm' })
-      setVideoBlob(blob)
-      router.push('/confirm')
     }
     setIsRecording(false)
   }
@@ -172,12 +202,88 @@ export default function RecordPage() {
           ✕
         </button>
 
+        {/* Camera permission overlay */}
         {cameraError && (
           <div style={{
-            position: 'absolute', top: 'var(--page-px)', right: 'var(--page-px)', zIndex: 10, fontSize: 'var(--text-xs)',
-            background: 'rgba(0,0,0,0.5)', color: '#ffd', padding: '4px 8px', borderRadius: 6,
+            position: 'absolute', inset: 0, zIndex: 20,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            background: 'rgba(0,0,0,0.85)', padding: '0 32px', textAlign: 'center',
           }}>
-            SIMULATED
+            <div style={{
+              width: 64, height: 64, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)', display: 'flex',
+              alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+              fontSize: 28,
+            }}>
+              {permissionState === 'unsupported' ? '📵' : '📷'}
+            </div>
+
+            {permissionState === 'unsupported' ? (
+              <>
+                <div style={{ color: 'white', fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: 8 }}>
+                  Camera Not Available
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'var(--text-body)', lineHeight: 1.5, marginBottom: 24 }}>
+                  Your device does not have a camera or your browser doesn&apos;t support camera access.
+                </div>
+              </>
+            ) : permissionState === 'denied' ? (
+              <>
+                <div style={{ color: 'white', fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: 8 }}>
+                  Camera Access Blocked
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'var(--text-body)', lineHeight: 1.5, marginBottom: 24 }}>
+                  Camera permission was denied. To record your shot, please enable camera access in your browser settings, then tap the button below.
+                </div>
+                <button
+                  onClick={requestCamera}
+                  style={{
+                    background: 'var(--color-gold)', color: 'var(--color-green-dark)',
+                    border: 'none', borderRadius: 12, padding: '14px 32px',
+                    fontSize: 'var(--text-body)', fontWeight: 700, cursor: 'pointer',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  Try Again
+                </button>
+              </>
+            ) : permissionState === 'prompt' ? (
+              <>
+                <div style={{ color: 'white', fontSize: 'var(--text-lg)', fontWeight: 700, marginBottom: 8 }}>
+                  Camera Access Required
+                </div>
+                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'var(--text-body)', lineHeight: 1.5, marginBottom: 24 }}>
+                  We need camera access to record your hole-in-one attempt. Tap below and allow camera access when prompted.
+                </div>
+                <button
+                  onClick={requestCamera}
+                  style={{
+                    background: 'var(--color-gold)', color: 'var(--color-green-dark)',
+                    border: 'none', borderRadius: 12, padding: '14px 32px',
+                    fontSize: 'var(--text-body)', fontWeight: 700, cursor: 'pointer',
+                    letterSpacing: '0.02em',
+                  }}
+                >
+                  Enable Camera
+                </button>
+              </>
+            ) : (
+              /* checking state */
+              <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 'var(--text-body)' }}>
+                Requesting camera access...
+              </div>
+            )}
+
+            <button
+              onClick={handleCancel}
+              style={{
+                marginTop: 16, background: 'none', border: 'none',
+                color: 'rgba(255,255,255,0.5)', fontSize: 'var(--text-sm)',
+                cursor: 'pointer', textDecoration: 'underline',
+              }}
+            >
+              Go Back
+            </button>
           </div>
         )}
 
@@ -217,7 +323,7 @@ export default function RecordPage() {
           <button
             className={`record-btn-main${isRecording ? ' recording' : ''}`}
             onClick={isRecording ? stopRecording : startRecording}
-            disabled={!cameraReady}
+            disabled={!cameraReady || cameraError}
           >
             <div className="record-btn-main-inner" />
           </button>
