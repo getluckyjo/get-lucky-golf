@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { BET_TIERS } from '@/context/BetContext'
+import { BET_TIERS } from '@/lib/tiers'
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
     const { data: bet, error } = await supabase
@@ -41,18 +41,20 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('[bets/create] DB insert failed:', error.message)
-      return NextResponse.json(
-        { error: 'Failed to create bet', detail: error.message },
-        { status: 500 },
-      )
+      return NextResponse.json({ error: 'Failed to create bet' }, { status: 500 })
     }
 
     // Increment total_attempts on profile — best-effort, fire-and-forget.
-    // Uses an RPC that may not exist in the DB yet; safe to ignore failures.
-    supabase.rpc('increment_attempts', { user_id: user.id }).catch(() => {})
+    try {
+      await supabase.rpc('increment_attempts', { user_id: user.id })
+    } catch {
+      // Safe to ignore if RPC fails
+    }
 
-    return NextResponse.json({ betId: bet.id, source: 'database' })
-  } catch {
-    return NextResponse.json({ error: 'Internal error' }, { status: 500 })
+    return NextResponse.json({ betId: bet.id })
+  } catch (err) {
+    console.error('[bets/create] Unexpected error:', err)
+    const msg = err instanceof Error ? err.message : 'Internal error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
