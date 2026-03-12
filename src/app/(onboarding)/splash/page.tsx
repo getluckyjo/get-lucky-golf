@@ -23,7 +23,7 @@ export default function SplashPage() {
     <PhoneFrame statusTheme="light">
       <div className="screen-splash">
         <img src="/logo.svg" alt="Get Lucky Golf Club" className="splash-logo-img" />
-        <div className="splash-tagline">Every shot could change everything</div>
+        <div className="splash-tagline">Where amateur golfers win like the pro's</div>
         <div className="splash-dots">
           <span />
           <span />
