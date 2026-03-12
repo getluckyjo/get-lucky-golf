@@ -51,9 +51,11 @@ export async function GET(request: Request) {
     }
 
     const adminClient = auth.adminClient
+
+    // Step 1: Query bets
     let query = adminClient
       .from('bets')
-      .select(`*, profiles ( name ), courses ( name ), holes ( hole_number )`, { count: 'exact' })
+      .select('*', { count: 'exact' })
 
     if (status) query = query.eq('status', status)
     if (tier) query = query.eq('tier', tier)
@@ -66,17 +68,42 @@ export async function GET(request: Request) {
     const offset = (page - 1) * limit
     query = query.range(offset, offset + limit - 1)
 
-    const { data: rows, count, error } = await query
+    const { data: rows, count: betCount, error } = await query
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    const betRows = rows ?? []
+
+    // Step 2: Fetch related profiles, courses, holes
+    const userIds = [...new Set(betRows.map((b: { user_id: string }) => b.user_id).filter(Boolean))]
+    const courseIds = [...new Set(betRows.map((b: { course_id: string }) => b.course_id).filter(Boolean))]
+    const holeIds = [...new Set(betRows.map((b: { hole_id: string }) => b.hole_id).filter(Boolean))]
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let data: AdminBetRecord[] = (rows ?? []).map((b: any) => ({
+    const profilesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const coursesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const holesMap: Record<string, any> = {}
+
+    const [profilesRes, coursesRes, holesRes] = await Promise.all([
+      userIds.length > 0 ? adminClient.from('profiles').select('id, name').in('id', userIds) : Promise.resolve({ data: [] }),
+      courseIds.length > 0 ? adminClient.from('courses').select('id, name').in('id', courseIds) : Promise.resolve({ data: [] }),
+      holeIds.length > 0 ? adminClient.from('holes').select('id, hole_number').in('id', holeIds) : Promise.resolve({ data: [] }),
+    ])
+
+    for (const p of profilesRes.data ?? []) profilesMap[p.id] = p
+    for (const c of coursesRes.data ?? []) coursesMap[c.id] = c
+    for (const h of holesRes.data ?? []) holesMap[h.id] = h
+
+    // Step 3: Combine
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let data: AdminBetRecord[] = betRows.map((b: any) => ({
       id: b.id,
       userId: b.user_id,
-      userName: b.profiles?.name,
+      userName: b.user_id ? profilesMap[b.user_id]?.name : null,
       tier: b.tier,
       stakeCents: b.stake_pence,
       potentialWinCents: b.potential_win_pence,
@@ -85,14 +112,14 @@ export async function GET(request: Request) {
       declaredAt: b.declared_at,
       videoUrl: b.video_url,
       paymentIntentId: b.payment_intent_id,
-      courseName: b.courses?.name ?? '',
+      courseName: b.course_id ? coursesMap[b.course_id]?.name ?? '' : '',
       courseId: b.course_id,
-      holeNumber: b.holes?.hole_number ?? 0,
+      holeNumber: b.hole_id ? holesMap[b.hole_id]?.hole_number ?? 0 : 0,
       holeId: b.hole_id,
       createdAt: b.created_at,
     }))
 
-    // Post-filter by search (name search requires post-filtering with Supabase)
+    // Post-filter by search (name search requires post-filtering)
     if (search) {
       const s = search.toLowerCase()
       data = data.filter(b =>
@@ -104,10 +131,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       data,
-      total: count ?? data.length,
+      total: betCount ?? data.length,
       page,
       limit,
-      totalPages: Math.ceil((count ?? data.length) / limit),
+      totalPages: Math.ceil((betCount ?? data.length) / limit),
     })
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })

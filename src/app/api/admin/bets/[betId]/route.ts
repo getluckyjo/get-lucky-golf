@@ -18,34 +18,39 @@ export async function GET(
       return NextResponse.json(bet)
     }
 
-    const { data, error } = await auth.adminClient
+    const adminClient = auth.adminClient
+    const { data: bet, error } = await adminClient
       .from('bets')
-      .select(`*, profiles ( name ), courses ( name ), holes ( hole_number )`)
+      .select('*')
       .eq('id', betId)
       .single()
 
-    if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (error || !bet) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    // Fetch related data separately
+    const [profileRes, courseRes, holeRes] = await Promise.all([
+      bet.user_id ? adminClient.from('profiles').select('name').eq('id', bet.user_id).single() : Promise.resolve({ data: null }),
+      bet.course_id ? adminClient.from('courses').select('name').eq('id', bet.course_id).single() : Promise.resolve({ data: null }),
+      bet.hole_id ? adminClient.from('holes').select('hole_number').eq('id', bet.hole_id).single() : Promise.resolve({ data: null }),
+    ])
 
     return NextResponse.json({
-      id: data.id,
-      userId: data.user_id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      userName: (data as any).profiles?.name,
-      tier: data.tier,
-      stakeCents: data.stake_pence,
-      potentialWinCents: data.potential_win_pence,
-      status: data.status,
-      declaredResult: data.declared_result,
-      declaredAt: data.declared_at,
-      videoUrl: data.video_url,
-      paymentIntentId: data.payment_intent_id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      courseName: (data as any).courses?.name ?? '',
-      courseId: data.course_id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      holeNumber: (data as any).holes?.hole_number ?? 0,
-      holeId: data.hole_id,
-      createdAt: data.created_at,
+      id: bet.id,
+      userId: bet.user_id,
+      userName: profileRes.data?.name ?? null,
+      tier: bet.tier,
+      stakeCents: bet.stake_pence,
+      potentialWinCents: bet.potential_win_pence,
+      status: bet.status,
+      declaredResult: bet.declared_result,
+      declaredAt: bet.declared_at,
+      videoUrl: bet.video_url,
+      paymentIntentId: bet.payment_intent_id,
+      courseName: courseRes.data?.name ?? '',
+      courseId: bet.course_id,
+      holeNumber: holeRes.data?.hole_number ?? 0,
+      holeId: bet.hole_id,
+      createdAt: bet.created_at,
     })
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
