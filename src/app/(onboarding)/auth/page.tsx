@@ -117,7 +117,7 @@ function AuthForm() {
             Continue with Google
           </button>
 
-          <div className="or-divider">or sign up with email</div>
+          <div className="or-divider">or sign up / log in with email</div>
 
           {/* Name row */}
           <div className="form-row">

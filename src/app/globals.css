@@ -452,13 +452,14 @@ body {
   width: 100%; height: 100%;
   background: var(--cream-light);
   display: flex; flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Auth header — back button + small logo */
 .auth-header {
   display: flex; align-items: center; gap: 12px;
-  padding: clamp(10px, 1.5vh, 16px) var(--page-px) clamp(4px, 1vh, 8px);
+  padding: clamp(18px, 3vh, 32px) var(--page-px) clamp(4px, 1vh, 8px);
 }
 .auth-back {
   width: 36px; height: 36px; background: rgba(0,0,0,0.04);
@@ -470,7 +471,7 @@ body {
 }
 .auth-back:active { background: rgba(0,0,0,0.1); }
 .auth-logo {
-  height: clamp(80px, 12vh, 110px); width: auto;
+  height: clamp(100px, 15vh, 130px); width: auto;
   margin-left: auto; margin-right: auto;
   padding-right: 36px; /* offset for centering against back button */
 }
@@ -500,11 +501,8 @@ body {
 
 /* Form */
 .signup-form {
-  flex: 1; min-height: 0;
   padding: 0 var(--page-px);
   display: flex; flex-direction: column; gap: clamp(12px, 1.8vh, 16px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
 }
 
 /* Google button */
@@ -551,7 +549,6 @@ body {
 /* Auth footer — CTA + terms */
 .auth-footer {
   padding: clamp(10px, 1.5vh, 16px) var(--page-px) clamp(14px, 2vh, 20px);
-  border-top: 1px solid rgba(0,0,0,0.04);
 }
 .auth-terms {
   font-size: 11px; color: #aaa; text-align: center;
