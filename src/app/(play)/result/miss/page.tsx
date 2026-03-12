@@ -5,12 +5,27 @@ import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import { useBet, BET_TIERS } from '@/context/BetContext'
 import { useAuth } from '@/context/AuthContext'
+import { useShareVideo } from '@/hooks/useShareVideo'
 
 export default function TryAgainPage() {
   const router = useRouter()
-  const { selectedTier, betId, resetSession } = useBet()
+  const { selectedTier, betId, resetSession, videoBlob } = useBet()
   const { profile } = useAuth()
   const [toast, setToast] = useState<string | null>(null)
+
+  const {
+    canShareFiles,
+    canShareText,
+    hasVideo,
+    isSharing,
+    shareWithVideo,
+    shareTextOnly,
+    downloadVideo,
+  } = useShareVideo({
+    videoBlob,
+    title: 'My hole-in-one attempt on Get Lucky Golf!',
+    text: 'I just took a hole-in-one challenge on Get Lucky Golf 🏌️‍♂️⛳ — next one is going in!',
+  })
 
   function showToast(msg: string) {
     setToast(msg)
@@ -31,13 +46,14 @@ export default function TryAgainPage() {
     router.push('/select-course')
   }
 
-  function handleShareShot() {
-    if (navigator.share) {
-      navigator.share({
-        title: 'My hole-in-one attempt on Get Lucky Golf!',
-        text: 'I just took a hole-in-one challenge on Get Lucky Golf 🏌️‍♂️⛳ — next one is going in!',
-        url: 'https://get-lucky-golf.vercel.app',
-      }).catch(() => {})
+  async function handleShareShot() {
+    if (hasVideo && canShareFiles) {
+      await shareWithVideo()
+    } else if (canShareText) {
+      await shareTextOnly()
+    } else if (hasVideo) {
+      downloadVideo()
+      showToast('Video saved! Share it from your gallery')
     } else {
       showToast('Sharing not supported on this browser')
     }
@@ -79,8 +95,8 @@ export default function TryAgainPage() {
           <button className="btn-primary" onClick={handlePlayAgain}>
             Play Again — {stakeLabel} →
           </button>
-          <button className="btn-share" onClick={handleShareShot}>
-            📤 Share My Attempt
+          <button className="btn-share" onClick={handleShareShot} disabled={isSharing}>
+            {isSharing ? 'Sharing...' : hasVideo ? '📤 Share My Shot' : '📤 Share My Attempt'}
           </button>
           <button className="btn-share" onClick={handleHome}>
             🏠 Back to Home

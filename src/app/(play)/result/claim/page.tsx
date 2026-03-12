@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import { useBet } from '@/context/BetContext'
 import { createClient } from '@/lib/supabase/client'
+import { useShareVideo } from '@/hooks/useShareVideo'
 
 interface UploadStep {
   id: string
@@ -16,7 +17,41 @@ interface UploadStep {
 
 export default function ClaimPage() {
   const router = useRouter()
-  const { betId, resetSession } = useBet()
+  const { betId, resetSession, videoBlob } = useBet()
+  const [toast, setToast] = useState<string | null>(null)
+
+  const {
+    canShareFiles,
+    canShareText,
+    hasVideo,
+    isSharing,
+    shareWithVideo,
+    shareTextOnly,
+    downloadVideo,
+  } = useShareVideo({
+    videoBlob,
+    title: 'HOLE-IN-ONE on Get Lucky Golf!',
+    text: 'I just hit a HOLE-IN-ONE on Get Lucky Golf! ⛳🏆 Watch the shot!',
+  })
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2500)
+  }
+
+  async function handleShare() {
+    if (hasVideo && canShareFiles) {
+      await shareWithVideo()
+    } else if (canShareText) {
+      await shareTextOnly()
+    } else if (hasVideo) {
+      downloadVideo()
+      showToast('Video saved! Share it from your gallery')
+    } else {
+      showToast('Sharing not supported on this browser')
+    }
+  }
+
   const [steps, setSteps] = useState<UploadStep[]>([
     { id: 'video', title: 'Shot Video', desc: 'Your recording has been uploaded', done: true },
     { id: 'certificate', title: 'Course Certificate', desc: 'Official hole-in-one certificate from the club', done: false },
@@ -131,6 +166,15 @@ export default function ClaimPage() {
             {loading ? 'Submitting...' : 'Submit Claim →'}
           </button>
 
+          <button
+            className="btn-share"
+            onClick={handleShare}
+            disabled={isSharing}
+            style={{ marginTop: 10 }}
+          >
+            {isSharing ? 'Sharing...' : '📤 Share My Hole-in-One!'}
+          </button>
+
           {/* Escape hatch — user can return to home and submit docs later */}
           <button
             onClick={() => { resetSession(); router.push('/home') }}
@@ -150,6 +194,12 @@ export default function ClaimPage() {
           </div>
         </div>
       </div>
+
+      {toast && (
+        <div className="toast gold" style={{ bottom: 40, zIndex: 200 }}>
+          {toast}
+        </div>
+      )}
     </PhoneFrame>
   )
 }
