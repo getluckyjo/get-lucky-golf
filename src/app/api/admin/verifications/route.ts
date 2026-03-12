@@ -38,77 +38,101 @@ export async function GET(request: Request) {
       return NextResponse.json(resp)
     }
 
-    // Real DB query
+    // Real DB query — use separate queries to avoid fragile nested joins
     const adminClient = auth.adminClient
-    let query = adminClient
+
+    // Step 1: Query verifications
+    let verifQuery = adminClient
       .from('verifications')
-      .select(`
-        id,
-        bet_id,
-        status,
-        certificate_path,
-        affidavit_path,
-        footage_received_at,
-        documents_received_at,
-        verified_at,
-        payout_initiated_at,
-        reviewer_notes,
-        reviewed_by,
-        created_at,
-        bets!inner (
-          id,
-          user_id,
-          tier,
-          stake_pence,
-          potential_win_pence,
-          video_url,
-          declared_at,
-          courses ( name ),
-          holes ( hole_number ),
-          profiles ( name )
-        )
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
 
-    if (status) query = query.eq('status', status)
-
-    if (sort === 'oldest') query = query.order('created_at', { ascending: true })
-    else if (sort === 'newest') query = query.order('created_at', { ascending: false })
+    if (status) verifQuery = verifQuery.eq('status', status)
+    if (sort === 'oldest') verifQuery = verifQuery.order('created_at', { ascending: true })
+    else if (sort === 'newest') verifQuery = verifQuery.order('created_at', { ascending: false })
 
     const offset = (page - 1) * limit
-    query = query.range(offset, offset + limit - 1)
+    verifQuery = verifQuery.range(offset, offset + limit - 1)
 
-    const { data: rows, count, error } = await query
+    const { data: verifs, count: verifCount, error: verifError } = await verifQuery
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (verifError) {
+      return NextResponse.json({ error: verifError.message }, { status: 500 })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const data: VerificationQueueItem[] = (rows ?? []).map((row: any) => ({
-      id: row.id,
-      betId: row.bet_id,
-      status: row.status,
-      tier: row.bets?.tier,
-      stakeCents: row.bets?.stake_pence,
-      potentialWinCents: row.bets?.potential_win_pence,
-      videoUrl: row.bets?.video_url,
-      certificatePath: row.certificate_path,
-      affidavitPath: row.affidavit_path,
-      userName: row.bets?.profiles?.name,
-      userId: row.bets?.user_id,
-      courseName: row.bets?.courses?.name,
-      holeNumber: row.bets?.holes?.hole_number,
-      createdAt: row.created_at,
-      declaredAt: row.bets?.declared_at,
-      documentsReceivedAt: row.documents_received_at,
-      reviewerNotes: row.reviewer_notes,
-      reviewedBy: row.reviewed_by,
-      verifiedAt: row.verified_at,
-      payoutInitiatedAt: row.payout_initiated_at,
-    }))
+    const verifRows = verifs ?? []
 
+    // Step 2: Fetch related bets
+    const betIds = [...new Set(verifRows.map((v: { bet_id: string }) => v.bet_id).filter(Boolean))]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let betsMap: Record<string, any> = {}
+    if (betIds.length > 0) {
+      const { data: betsData } = await adminClient
+        .from('bets')
+        .select('id, user_id, course_id, hole_id, tier, stake_pence, potential_win_pence, video_url, declared_at')
+        .in('id', betIds)
+      for (const b of betsData ?? []) {
+        betsMap[b.id] = b
+      }
+    }
+
+    // Step 3: Fetch related courses, holes, profiles
+    const courseIds = [...new Set(Object.values(betsMap).map((b) => b.course_id).filter(Boolean))]
+    const holeIds = [...new Set(Object.values(betsMap).map((b) => b.hole_id).filter(Boolean))]
+    const userIds = [...new Set(Object.values(betsMap).map((b) => b.user_id).filter(Boolean))]
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let coursesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let holesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let profilesMap: Record<string, any> = {}
+
+    const [coursesRes, holesRes, profilesRes] = await Promise.all([
+      courseIds.length > 0
+        ? adminClient.from('courses').select('id, name').in('id', courseIds)
+        : Promise.resolve({ data: [] }),
+      holeIds.length > 0
+        ? adminClient.from('holes').select('id, hole_number').in('id', holeIds)
+        : Promise.resolve({ data: [] }),
+      userIds.length > 0
+        ? adminClient.from('profiles').select('id, name').in('id', userIds)
+        : Promise.resolve({ data: [] }),
+    ])
+
+    for (const c of coursesRes.data ?? []) coursesMap[c.id] = c
+    for (const h of holesRes.data ?? []) holesMap[h.id] = h
+    for (const p of profilesRes.data ?? []) profilesMap[p.id] = p
+
+    // Step 4: Combine
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const data: VerificationQueueItem[] = verifRows.map((row: any) => {
+      const bet = betsMap[row.bet_id]
+      return {
+        id: row.id,
+        betId: row.bet_id,
+        status: row.status,
+        tier: bet?.tier,
+        stakeCents: bet?.stake_pence,
+        potentialWinCents: bet?.potential_win_pence,
+        videoUrl: bet?.video_url,
+        certificatePath: row.certificate_path,
+        affidavitPath: row.affidavit_path,
+        userName: bet?.user_id ? profilesMap[bet.user_id]?.name : null,
+        userId: bet?.user_id,
+        courseName: bet?.course_id ? coursesMap[bet.course_id]?.name : null,
+        holeNumber: bet?.hole_id ? holesMap[bet.hole_id]?.hole_number : null,
+        createdAt: row.created_at,
+        declaredAt: bet?.declared_at,
+        documentsReceivedAt: row.documents_received_at,
+        reviewerNotes: row.reviewer_notes,
+        reviewedBy: row.reviewed_by,
+        verifiedAt: row.verified_at,
+        payoutInitiatedAt: row.payout_initiated_at,
+      }
+    })
+
+    // Post-filter by tier if needed
     if (tier) {
-      // Post-filter by tier since it's on the joined table
       const filtered = data.filter(d => d.tier === tier)
       return NextResponse.json({
         data: filtered,
@@ -121,10 +145,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       data,
-      total: count ?? data.length,
+      total: verifCount ?? data.length,
       page,
       limit,
-      totalPages: Math.ceil((count ?? data.length) / limit),
+      totalPages: Math.ceil((verifCount ?? data.length) / limit),
     })
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })

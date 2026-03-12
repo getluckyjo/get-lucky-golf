@@ -20,18 +20,10 @@ export async function GET(
 
     const adminClient = auth.adminClient
 
-    // Fetch verification with joined data
+    // Step 1: Fetch verification
     const { data: row, error } = await adminClient
       .from('verifications')
-      .select(`
-        *,
-        bets!inner (
-          *,
-          courses ( name ),
-          holes ( hole_number ),
-          profiles ( name, total_attempts )
-        )
-      `)
+      .select('*')
       .eq('id', verificationId)
       .single()
 
@@ -39,9 +31,38 @@ export async function GET(
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
-    // Generate signed URLs for video and documents
+    // Step 2: Fetch related bet
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bet = row.bets as any
+    let bet: any = null
+    if (row.bet_id) {
+      const { data: betData } = await adminClient
+        .from('bets')
+        .select('*')
+        .eq('id', row.bet_id)
+        .single()
+      bet = betData
+    }
+
+    // Step 3: Fetch course, hole, profile separately
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let course: any = null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let hole: any = null
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let profile: any = null
+
+    if (bet) {
+      const [courseRes, holeRes, profileRes] = await Promise.all([
+        bet.course_id ? adminClient.from('courses').select('name').eq('id', bet.course_id).single() : Promise.resolve({ data: null }),
+        bet.hole_id ? adminClient.from('holes').select('hole_number').eq('id', bet.hole_id).single() : Promise.resolve({ data: null }),
+        bet.user_id ? adminClient.from('profiles').select('name, total_attempts').eq('id', bet.user_id).single() : Promise.resolve({ data: null }),
+      ])
+      course = courseRes.data
+      hole = holeRes.data
+      profile = profileRes.data
+    }
+
+    // Generate signed URLs for video and documents
     let videoSignedUrl = null
     let certificateSignedUrl = null
     let affidavitSignedUrl = null
@@ -68,12 +89,53 @@ export async function GET(
     }
 
     // Fetch user's bet history
-    const { data: userBets } = await adminClient
-      .from('bets')
-      .select(`*, courses ( name ), holes ( hole_number )`)
-      .eq('user_id', bet.user_id)
-      .order('created_at', { ascending: false })
-      .limit(5)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let userBetHistory: any[] = []
+    if (bet?.user_id) {
+      const { data: userBets } = await adminClient
+        .from('bets')
+        .select('*')
+        .eq('user_id', bet.user_id)
+        .order('created_at', { ascending: false })
+        .limit(5)
+
+      // Fetch course/hole names for bet history
+      const histBets = userBets ?? []
+      const histCourseIds = [...new Set(histBets.map((b: { course_id: string }) => b.course_id).filter(Boolean))]
+      const histHoleIds = [...new Set(histBets.map((b: { hole_id: string }) => b.hole_id).filter(Boolean))]
+
+      const [histCoursesRes, histHolesRes] = await Promise.all([
+        histCourseIds.length > 0 ? adminClient.from('courses').select('id, name').in('id', histCourseIds) : Promise.resolve({ data: [] }),
+        histHoleIds.length > 0 ? adminClient.from('holes').select('id, hole_number').in('id', histHoleIds) : Promise.resolve({ data: [] }),
+      ])
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const histCoursesMap: Record<string, any> = {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const histHolesMap: Record<string, any> = {}
+      for (const c of histCoursesRes.data ?? []) histCoursesMap[c.id] = c
+      for (const h of histHolesRes.data ?? []) histHolesMap[h.id] = h
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      userBetHistory = histBets.map((b: any) => ({
+        id: b.id,
+        userId: b.user_id,
+        userName: profile?.name,
+        tier: b.tier,
+        stakeCents: b.stake_pence,
+        potentialWinCents: b.potential_win_pence,
+        status: b.status,
+        declaredResult: b.declared_result,
+        declaredAt: b.declared_at,
+        videoUrl: b.video_url,
+        paymentIntentId: b.payment_intent_id,
+        courseName: histCoursesMap[b.course_id]?.name ?? '',
+        courseId: b.course_id,
+        holeNumber: histHolesMap[b.hole_id]?.hole_number ?? 0,
+        holeId: b.hole_id,
+        createdAt: b.created_at,
+      }))
+    }
 
     return NextResponse.json({
       id: row.id,
@@ -85,10 +147,10 @@ export async function GET(
       videoUrl: bet?.video_url,
       certificatePath: row.certificate_path,
       affidavitPath: row.affidavit_path,
-      userName: bet?.profiles?.name,
+      userName: profile?.name,
       userId: bet?.user_id,
-      courseName: bet?.courses?.name,
-      holeNumber: bet?.holes?.hole_number,
+      courseName: course?.name,
+      holeNumber: hole?.hole_number,
       createdAt: row.created_at,
       declaredAt: bet?.declared_at,
       documentsReceivedAt: row.documents_received_at,
@@ -99,26 +161,8 @@ export async function GET(
       videoSignedUrl,
       certificateSignedUrl,
       affidavitSignedUrl,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      userBetHistory: (userBets ?? []).map((b: any) => ({
-        id: b.id,
-        userId: b.user_id,
-        userName: bet?.profiles?.name,
-        tier: b.tier,
-        stakeCents: b.stake_pence,
-        potentialWinCents: b.potential_win_pence,
-        status: b.status,
-        declaredResult: b.declared_result,
-        declaredAt: b.declared_at,
-        videoUrl: b.video_url,
-        paymentIntentId: b.payment_intent_id,
-        courseName: b.courses?.name ?? '',
-        courseId: b.course_id,
-        holeNumber: b.holes?.hole_number ?? 0,
-        holeId: b.hole_id,
-        createdAt: b.created_at,
-      })),
-      userTotalAttempts: bet?.profiles?.total_attempts ?? 0,
+      userBetHistory,
+      userTotalAttempts: profile?.total_attempts ?? 0,
     })
   } catch {
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })

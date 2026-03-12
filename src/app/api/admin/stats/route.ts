@@ -43,15 +43,37 @@ export async function GET() {
     // Recent bets
     const { data: recentBetsRaw } = await adminClient
       .from('bets')
-      .select(`*, profiles ( name ), courses ( name ), holes ( hole_number )`)
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(5)
 
+    const rbets = recentBetsRaw ?? []
+    // Fetch related names for recent bets
+    const rbCourseIds = [...new Set(rbets.map((b: { course_id: string }) => b.course_id).filter(Boolean))]
+    const rbHoleIds = [...new Set(rbets.map((b: { hole_id: string }) => b.hole_id).filter(Boolean))]
+    const rbUserIds = [...new Set(rbets.map((b: { user_id: string }) => b.user_id).filter(Boolean))]
+
+    const [rbCoursesRes, rbHolesRes, rbProfilesRes] = await Promise.all([
+      rbCourseIds.length > 0 ? adminClient.from('courses').select('id, name').in('id', rbCourseIds) : Promise.resolve({ data: [] }),
+      rbHoleIds.length > 0 ? adminClient.from('holes').select('id, hole_number').in('id', rbHoleIds) : Promise.resolve({ data: [] }),
+      rbUserIds.length > 0 ? adminClient.from('profiles').select('id, name').in('id', rbUserIds) : Promise.resolve({ data: [] }),
+    ])
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recentBets = (recentBetsRaw ?? []).map((b: any) => ({
+    const rbCoursesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rbHolesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rbProfilesMap: Record<string, any> = {}
+    for (const c of rbCoursesRes.data ?? []) rbCoursesMap[c.id] = c
+    for (const h of rbHolesRes.data ?? []) rbHolesMap[h.id] = h
+    for (const p of rbProfilesRes.data ?? []) rbProfilesMap[p.id] = p
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recentBets = rbets.map((b: any) => ({
       id: b.id,
       userId: b.user_id,
-      userName: b.profiles?.name,
+      userName: rbProfilesMap[b.user_id]?.name,
       tier: b.tier,
       stakeCents: b.stake_pence,
       potentialWinCents: b.potential_win_pence,
@@ -60,9 +82,9 @@ export async function GET() {
       declaredAt: b.declared_at,
       videoUrl: b.video_url,
       paymentIntentId: b.payment_intent_id,
-      courseName: b.courses?.name ?? '',
+      courseName: rbCoursesMap[b.course_id]?.name ?? '',
       courseId: b.course_id,
-      holeNumber: b.holes?.hole_number ?? 0,
+      holeNumber: rbHolesMap[b.hole_id]?.hole_number ?? 0,
       holeId: b.hole_id,
       createdAt: b.created_at,
     }))
@@ -70,33 +92,69 @@ export async function GET() {
     // Recent verifications
     const { data: recentVerifsRaw } = await adminClient
       .from('verifications')
-      .select(`*, bets!inner ( tier, stake_pence, potential_win_pence, video_url, user_id, declared_at, courses ( name ), holes ( hole_number ), profiles ( name ) )`)
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(3)
 
+    const rverifs = recentVerifsRaw ?? []
+    // Fetch related bet data for recent verifications
+    const rvBetIds = [...new Set(rverifs.map((v: { bet_id: string }) => v.bet_id).filter(Boolean))]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const recentVerifications = (recentVerifsRaw ?? []).map((row: any) => ({
-      id: row.id,
-      betId: row.bet_id,
-      status: row.status,
-      tier: row.bets?.tier,
-      stakeCents: row.bets?.stake_pence,
-      potentialWinCents: row.bets?.potential_win_pence,
-      videoUrl: row.bets?.video_url,
-      certificatePath: row.certificate_path,
-      affidavitPath: row.affidavit_path,
-      userName: row.bets?.profiles?.name,
-      userId: row.bets?.user_id,
-      courseName: row.bets?.courses?.name,
-      holeNumber: row.bets?.holes?.hole_number,
-      createdAt: row.created_at,
-      declaredAt: row.bets?.declared_at,
-      documentsReceivedAt: row.documents_received_at,
-      reviewerNotes: row.reviewer_notes,
-      reviewedBy: row.reviewed_by,
-      verifiedAt: row.verified_at,
-      payoutInitiatedAt: row.payout_initiated_at,
-    }))
+    let rvBetsMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let rvCoursesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let rvHolesMap: Record<string, any> = {}
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let rvProfilesMap: Record<string, any> = {}
+
+    if (rvBetIds.length > 0) {
+      const { data: rvBetsData } = await adminClient
+        .from('bets')
+        .select('id, user_id, course_id, hole_id, tier, stake_pence, potential_win_pence, video_url, declared_at')
+        .in('id', rvBetIds)
+      for (const b of rvBetsData ?? []) rvBetsMap[b.id] = b
+
+      const rvCourseIds = [...new Set(Object.values(rvBetsMap).map((b) => b.course_id).filter(Boolean))]
+      const rvHoleIds = [...new Set(Object.values(rvBetsMap).map((b) => b.hole_id).filter(Boolean))]
+      const rvUserIds = [...new Set(Object.values(rvBetsMap).map((b) => b.user_id).filter(Boolean))]
+
+      const [rvCR, rvHR, rvPR] = await Promise.all([
+        rvCourseIds.length > 0 ? adminClient.from('courses').select('id, name').in('id', rvCourseIds) : Promise.resolve({ data: [] }),
+        rvHoleIds.length > 0 ? adminClient.from('holes').select('id, hole_number').in('id', rvHoleIds) : Promise.resolve({ data: [] }),
+        rvUserIds.length > 0 ? adminClient.from('profiles').select('id, name').in('id', rvUserIds) : Promise.resolve({ data: [] }),
+      ])
+      for (const c of rvCR.data ?? []) rvCoursesMap[c.id] = c
+      for (const h of rvHR.data ?? []) rvHolesMap[h.id] = h
+      for (const p of rvPR.data ?? []) rvProfilesMap[p.id] = p
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const recentVerifications = rverifs.map((row: any) => {
+      const bet = rvBetsMap[row.bet_id]
+      return {
+        id: row.id,
+        betId: row.bet_id,
+        status: row.status,
+        tier: bet?.tier,
+        stakeCents: bet?.stake_pence,
+        potentialWinCents: bet?.potential_win_pence,
+        videoUrl: bet?.video_url,
+        certificatePath: row.certificate_path,
+        affidavitPath: row.affidavit_path,
+        userName: bet?.user_id ? rvProfilesMap[bet.user_id]?.name : null,
+        userId: bet?.user_id,
+        courseName: bet?.course_id ? rvCoursesMap[bet.course_id]?.name : null,
+        holeNumber: bet?.hole_id ? rvHolesMap[bet.hole_id]?.hole_number : null,
+        createdAt: row.created_at,
+        declaredAt: bet?.declared_at,
+        documentsReceivedAt: row.documents_received_at,
+        reviewerNotes: row.reviewer_notes,
+        reviewedBy: row.reviewed_by,
+        verifiedAt: row.verified_at,
+        payoutInitiatedAt: row.payout_initiated_at,
+      }
+    })
 
     // Get admin info
     let adminName = 'Admin'
