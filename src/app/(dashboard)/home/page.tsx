@@ -200,37 +200,6 @@ export default function HomePage() {
           )
         })()}
 
-        {/* Stats */}
-        <div style={{ display: 'flex', gap: 'var(--space-sm)', padding: '0 var(--page-px)', marginBottom: 'var(--space-lg)' }}>
-          {authLoading ? (
-            [0, 1, 2].map(i => (
-              <div key={i} style={{ flex: 1, background: 'white', borderRadius: 'var(--radius-md)', padding: 'var(--space-md) var(--space-sm)', border: '1px solid #e8e4dc', textAlign: 'center' as const }}>
-                <div className="skeleton" style={{ height: 26, width: '60%', margin: '0 auto 8px', borderRadius: 4 }} />
-                <div className="skeleton" style={{ height: 11, width: '50%', margin: '0 auto', borderRadius: 4 }} />
-              </div>
-            ))
-          ) : (
-            [
-              { value: String(totalAttempts || 0), label: 'Attempts' },
-              { value: String(uniqueCourses || 0), label: 'Courses' },
-              { value: wonDisplay, label: wonLabel },
-            ].map(stat => (
-              <div
-                key={stat.label}
-                style={{
-                  flex: 1, background: 'white', borderRadius: 14, padding: '14px 12px',
-                  textAlign: 'center', border: '1px solid #e8e4dc',
-                }}
-              >
-                <div style={{ fontFamily: 'Poster Gothic, sans-serif', fontSize: 'var(--text-xl)', fontWeight: 900, color: 'var(--green-deep)' }}>
-                  {stat.value}
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-light)', marginTop: 2 }}>{stat.label}</div>
-              </div>
-            ))
-          )}
-        </div>
-
         {/* Recent bets */}
         <section aria-label="Recent attempts">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--page-px)', marginBottom: 'var(--space-sm)' }}>
