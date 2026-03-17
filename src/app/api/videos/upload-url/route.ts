@@ -27,6 +27,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Verify bet belongs to the current user (prevent IDOR)
+    const { data: bet } = await supabase
+      .from('bets')
+      .select('id')
+      .eq('id', betId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (!bet) {
+      return NextResponse.json({ error: 'Bet not found or not yours' }, { status: 403 })
+    }
+
     const ext = mimeType.includes('mp4') ? 'mp4' : 'webm'
     const storagePath = `${user.id}/${betId}/shot.${ext}`
 

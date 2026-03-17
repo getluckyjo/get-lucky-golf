@@ -66,25 +66,29 @@ export default function LeaderboardPage() {
   const totalPaidOut = BIGGEST_WINNERS.reduce((s, w) => s + w.amount, 0)
 
   return (
-    <PhoneFrame statusTheme="dark">
+    <PhoneFrame statusTheme="dark" hideSponsor>
       <div className="screen-leaderboard">
         {/* Header */}
-        <div className="leaderboard-header">
-          <div className="leaderboard-title">🏆 Winners</div>
+        <header className="leaderboard-header">
+          <h1 className="leaderboard-title"><span aria-hidden="true">🏆 </span>Winners</h1>
           <div className="leaderboard-subtitle">
             R{totalPaidOut.toLocaleString('en-ZA')} paid out to date
           </div>
-        </div>
+        </header>
 
         {/* Tabs */}
-        <div className="leaderboard-tabs">
+        <div className="leaderboard-tabs" role="tablist" aria-label="Winners list view">
           <button
+            role="tab"
+            aria-selected={tab === 'biggest'}
             className={`lb-tab${tab === 'biggest' ? ' active' : ''}`}
             onClick={() => setTab('biggest')}
           >
             Biggest Wins
           </button>
           <button
+            role="tab"
+            aria-selected={tab === 'recent'}
             className={`lb-tab${tab === 'recent' ? ' active' : ''}`}
             onClick={() => setTab('recent')}
           >
@@ -126,7 +130,7 @@ export default function LeaderboardPage() {
                   {firstName} (You)
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-light)', marginTop: 1 }}>
-                  Play your first round to appear on the leaderboard!
+                  Win your first hole-in-one to appear here!
                 </div>
               </div>
               <button

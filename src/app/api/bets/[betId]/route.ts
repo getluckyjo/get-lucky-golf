@@ -11,11 +11,6 @@ export async function PATCH(
     const body = await request.json()
     const { status, declared_result } = body
 
-    // Return mock success for mock bet IDs
-    if (betId.startsWith('bet_mock') || betId.startsWith('bet_fallback')) {
-      return NextResponse.json({ success: true, source: 'mock' })
-    }
-
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -64,10 +59,6 @@ export async function GET(
 ) {
   try {
     const { betId } = await params
-
-    if (betId.startsWith('bet_mock') || betId.startsWith('bet_fallback')) {
-      return NextResponse.json({ bet: null, source: 'mock' })
-    }
 
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

@@ -52,24 +52,24 @@ export default function AccountPage() {
   }
 
   return (
-    <PhoneFrame statusTheme="dark">
+    <PhoneFrame statusTheme="dark" hideSponsor>
 
       {/* ── Scrollable body ── */}
       <div style={{ overflowY: 'auto', height: '100%', background: 'var(--cream)' }}>
 
         {/* Header */}
-        <div style={{ padding: '60px var(--page-px) 0' }}>
-          <div style={{
+        <header style={{ padding: '60px var(--page-px) 0' }}>
+          <h1 style={{
             fontFamily: 'Poster Gothic, sans-serif',
             fontSize: 'var(--text-2xl)', fontWeight: 900, color: 'var(--green-deep)',
             marginBottom: 4,
           }}>
             My Account
-          </div>
+          </h1>
           <div style={{ fontSize: 'var(--text-body)', color: 'var(--gray-light)', marginBottom: 'var(--space-lg)' }}>
             Manage your profile &amp; preferences
           </div>
-        </div>
+        </header>
 
         {/* ── Identity card ── */}
         <div style={{ padding: '0 var(--page-px)', marginBottom: 'var(--space-lg)' }}>
@@ -102,12 +102,12 @@ export default function AccountPage() {
                 <>
                   <div style={{
                     fontSize: 'var(--text-lg)', fontWeight: 700, color: 'white',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    lineHeight: 1.3,
                     fontFamily: 'Poster Gothic, sans-serif',
                   }}>
                     {displayName ?? 'Golfer'}
                   </div>
-                  <div style={{ fontSize: 'var(--text-body)', color: 'rgba(255,255,255,0.7)', marginTop: 3 }}>
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,0.7)', marginTop: 3, wordBreak: 'break-all' }}>
                     {user?.email}
                   </div>
                   {profile?.handicap != null && (
@@ -174,7 +174,7 @@ export default function AccountPage() {
                       style={{
                         width: '100%', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)',
                         border: '1.5px solid #d0c9be', fontSize: 'var(--text-body)', outline: 'none',
-                        boxSizing: 'border-box' as const, background: '#faf8f4',
+                        boxSizing: 'border-box' as const, background: '#faf8f4', color: 'var(--green-deep)',
                       }}
                     />
                   </div>
@@ -195,7 +195,7 @@ export default function AccountPage() {
                       style={{
                         width: '100%', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)',
                         border: '1.5px solid #d0c9be', fontSize: 'var(--text-body)', outline: 'none',
-                        boxSizing: 'border-box' as const, background: '#faf8f4',
+                        boxSizing: 'border-box' as const, background: '#faf8f4', color: 'var(--green-deep)',
                       }}
                     />
                   </div>
@@ -247,7 +247,7 @@ export default function AccountPage() {
                     ) : (
                       <span style={{
                         fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--black)',
-                        maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        textAlign: 'right', wordBreak: 'break-word',
                       }}>
                         {row.value}
                       </span>
@@ -293,6 +293,33 @@ export default function AccountPage() {
           </div>
         </div>
 
+        {/* ── Legal links ── */}
+        <div style={{ padding: '0 var(--page-px)', marginBottom: 'var(--space-md)' }}>
+          <div style={{ background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #e8e4dc', overflow: 'hidden' }}>
+            {[
+              { label: 'Terms & Conditions', href: '/terms' },
+              { label: 'Privacy Policy', href: '/privacy' },
+              { label: 'Responsible Play', href: '/responsible-play' },
+            ].map((item, i, arr) => (
+              <button
+                key={item.label}
+                onClick={() => router.push(item.href)}
+                style={{
+                  width: '100%', padding: 'var(--space-md) var(--space-lg)',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  borderBottom: i < arr.length - 1 ? '1px solid #f8f4ee' : 'none',
+                  fontSize: 'var(--text-body)', color: 'var(--green-deep)', fontWeight: 500,
+                  textAlign: 'left',
+                }}
+              >
+                {item.label}
+                <span style={{ color: 'var(--gray-light)', fontSize: 'var(--text-sm)' }}>→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* ── Sign out ── */}
         <div style={{ padding: '0 var(--page-px)', paddingBottom: 'var(--tab-bar-pb)' }}>
           <button
@@ -318,7 +345,7 @@ export default function AccountPage() {
 
       {/* ── Toast ── */}
       {toast && (
-        <div className="toast gold" style={{ bottom: 'calc(var(--tab-bar-h) + 10px)', zIndex: 200 }}>
+        <div role="status" aria-live="polite" className="toast gold" style={{ bottom: 'calc(var(--tab-bar-h) + 10px)', zIndex: 200 }}>
           {toast}
         </div>
       )}

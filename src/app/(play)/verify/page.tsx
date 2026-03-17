@@ -42,6 +42,15 @@ export default function VerifyPage() {
   const { selectedTier, betId, resetSession } = useBet()
   const [steps, setSteps] = useState<VerifyStep[]>(INITIAL_STEPS)
   const pollRef = useRef<NodeJS.Timeout | null>(null)
+  const pollIntervalRef = useRef(10_000)
+  const errorCountRef = useRef(0)
+
+  // Guard: require an active bet to reach this page
+  useEffect(() => {
+    if (!betId) {
+      router.replace('/home')
+    }
+  }, [betId, router])
 
   const tierData = BET_TIERS.find(t => t.tier === selectedTier) ?? BET_TIERS[1]
   const payoutDate = new Date()
@@ -63,20 +72,27 @@ export default function VerifyPage() {
     async function poll() {
       try {
         const res = await fetch(`/api/verifications/${betId}`)
+        if (!res.ok) throw new Error('poll failed')
         const { verification } = await res.json()
         if (verification?.status) {
           const activeIndex = STATUS_TO_STEPS[verification.status] ?? 1
           setSteps(prev => applyProgress(prev, activeIndex))
         }
+        // Reset on success
+        errorCountRef.current = 0
+        pollIntervalRef.current = 10_000
       } catch {
-        // Ignore poll errors
+        // Exponential backoff: 10s → 20s → 40s → max 60s
+        errorCountRef.current += 1
+        pollIntervalRef.current = Math.min(10_000 * Math.pow(2, errorCountRef.current), 60_000)
       }
+      // Schedule next poll with current interval
+      pollRef.current = setTimeout(poll, pollIntervalRef.current)
     }
 
     poll()
-    pollRef.current = setInterval(poll, 10_000)
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
+      if (pollRef.current) clearTimeout(pollRef.current)
     }
   }, [betId])
 
@@ -84,6 +100,8 @@ export default function VerifyPage() {
     resetSession()
     router.push('/home')
   }
+
+  if (!betId) return null
 
   return (
     <PhoneFrame statusTheme="dark">

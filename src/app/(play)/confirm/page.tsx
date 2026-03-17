@@ -12,6 +12,15 @@ export default function ConfirmPage() {
   const [analysing, setAnalysing] = useState(true)
   const [videoUrl, setVideoUrl] = useState<string | null>(null)
 
+  const hasVideo = !!(videoBlob && videoBlob.size > 0)
+
+  // Guard: require a recorded video to reach this page
+  useEffect(() => {
+    if (!hasVideo) {
+      router.replace('/home')
+    }
+  }, [hasVideo, router])
+
   useEffect(() => {
     if (videoBlob && videoBlob.size > 0) {
       const url = URL.createObjectURL(videoBlob)
@@ -46,6 +55,8 @@ export default function ConfirmPage() {
     declareResult('miss')
     router.push('/result/miss')
   }
+
+  if (!hasVideo) return null
 
   return (
     <PhoneFrame statusTheme="dark">

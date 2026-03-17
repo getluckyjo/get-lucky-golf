@@ -72,11 +72,22 @@ export async function PATCH(
       return NextResponse.json({ success: true, source: 'mock', betId })
     }
 
-    // Whitelist allowed fields to prevent mass assignment
-    const ALLOWED_FIELDS = ['status', 'declared_result'] as const
+    // Whitelist allowed fields and values to prevent mass assignment + invalid states
+    const VALID_STATUSES = ['active', 'miss', 'claimed', 'verified', 'paid'] as const
+    const VALID_RESULTS = ['miss', 'win'] as const
     const updates: Record<string, unknown> = {}
-    for (const key of ALLOWED_FIELDS) {
-      if (body[key] !== undefined) updates[key] = body[key]
+
+    if (body.status !== undefined) {
+      if (!(VALID_STATUSES as readonly string[]).includes(body.status)) {
+        return NextResponse.json({ error: 'Invalid status value' }, { status: 400 })
+      }
+      updates.status = body.status
+    }
+    if (body.declared_result !== undefined) {
+      if (!(VALID_RESULTS as readonly string[]).includes(body.declared_result)) {
+        return NextResponse.json({ error: 'Invalid declared_result value' }, { status: 400 })
+      }
+      updates.declared_result = body.declared_result
     }
 
     if (Object.keys(updates).length === 0) {

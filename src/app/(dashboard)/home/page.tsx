@@ -71,46 +71,53 @@ export default function HomePage() {
   const initials = getInitials(displayName, user?.email)
   const firstName = displayName?.split(' ')[0] ?? null
 
+  const userId = user?.id
   useEffect(() => {
-    fetch('/api/bets')
+    if (!userId) {
+      setBetsLoading(false)
+      return
+    }
+    fetch('/api/bets?limit=500')
       .then(r => r.json())
       .then(data => {
         if (data.bets) setBets(data.bets)
       })
       .catch(() => {})
       .finally(() => setBetsLoading(false))
-  }, [])
+  }, [userId])
 
-  // Compute stats from real bets
-  const totalAttempts = profile?.total_attempts ?? bets.length
+  // Compute stats from real bets — use bets.length to stay consistent with My Bets page
+  const totalAttempts = bets.length
   const uniqueCourses = new Set(bets.map(b => b.courses?.id).filter(Boolean)).size
   const totalWon = bets
     .filter(b => b.status === 'paid' || b.status === 'verified')
     .reduce((sum, b) => sum + b.potential_win_pence, 0)
-  const wonDisplay = totalWon === 0 ? 'R0' : `R${(totalWon / 100).toLocaleString('en-ZA')}`
+  const hasWon = totalWon > 0
+  const wonDisplay = hasWon ? `R${(totalWon / 100).toLocaleString('en-ZA')}` : 'R1M'
+  const wonLabel = hasWon ? 'Won' : 'Top Prize'
 
   return (
-    <PhoneFrame statusTheme="dark">
+    <PhoneFrame statusTheme="dark" hideSponsor>
       <div className="screen-home">
         {/* Header */}
-        <div className="home-header">
+        <header className="home-header">
           <div className="home-greeting">
             Ready to get Lucky?
           </div>
           <button
             className="home-avatar"
             onClick={() => setShowProfile(true)}
-            title="Profile"
+            aria-label="Open profile menu"
             style={{ cursor: 'pointer', border: 'none', background: 'transparent', padding: 0 }}
           >
             {initials}
           </button>
-        </div>
+        </header>
 
         {/* Hero play card */}
         <div className="home-hero-card">
           <div className="home-hero-title">One Shot.<br />R1 Million.</div>
-          <div className="home-hero-sub">Select a course and back yourself on any par-3</div>
+          <div className="home-hero-sub">Stake R50–R1 000 on your hole-in-one. Land the lucky shot, win up to R1 million.</div>
           <button
             className="btn-gold"
             onClick={() => router.push('/select-course')}
@@ -127,12 +134,47 @@ export default function HomePage() {
           </button>
         </div>
 
+        {/* How It Works */}
+        <div style={{ padding: '0 var(--page-px)', marginBottom: 'var(--space-lg)' }}>
+          <h3 style={{
+            fontFamily: 'var(--font-heading)', fontSize: 'var(--text-xs)',
+            fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
+            color: 'var(--green-deep)', marginBottom: 'var(--space-sm)',
+          }}>
+            How It Works
+          </h3>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {[
+              { icon: '⛳', step: '1', label: 'Pick a course & par-3 hole' },
+              { icon: '💰', step: '2', label: 'Choose your stake' },
+              { icon: '🎥', step: '3', label: 'Film your shot & submit' },
+            ].map(s => (
+              <div key={s.step} style={{
+                flex: 1, background: 'white', borderRadius: 'var(--radius-md)',
+                border: '1px solid #e8e4dc', padding: '14px 10px', textAlign: 'center' as const,
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{s.icon}</div>
+                <div style={{
+                  fontSize: 10, fontWeight: 700, color: 'var(--gold)',
+                  marginBottom: 4, letterSpacing: '0.04em',
+                }}>
+                  STEP {s.step}
+                </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--green-deep)', fontWeight: 600, lineHeight: 1.3 }}>
+                  {s.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Pending claim alert */}
         {(() => {
           const activeClaim = bets.find(b => b.status === 'claimed' || (b.declared_result === 'win' && b.status !== 'paid' && b.status !== 'verified'))
           if (!activeClaim || betsLoading) return null
           return (
             <div
+              role="alert"
               onClick={() => router.push('/verify')}
               style={{
                 margin: '0 var(--page-px) var(--space-md)',
@@ -171,7 +213,7 @@ export default function HomePage() {
             [
               { value: String(totalAttempts || 0), label: 'Attempts' },
               { value: String(uniqueCourses || 0), label: 'Courses' },
-              { value: wonDisplay, label: 'Won' },
+              { value: wonDisplay, label: wonLabel },
             ].map(stat => (
               <div
                 key={stat.label}
@@ -190,8 +232,9 @@ export default function HomePage() {
         </div>
 
         {/* Recent bets */}
+        <section aria-label="Recent attempts">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 var(--page-px)', marginBottom: 'var(--space-sm)' }}>
-          <div className="home-section-title" style={{ padding: 0, margin: 0 }}>Recent Attempts</div>
+          <h2 className="home-section-title" style={{ padding: 0, margin: 0 }}>Recent Attempts</h2>
           {bets.length > 0 && (
             <button
               onClick={() => router.push('/history')}
@@ -229,7 +272,7 @@ export default function HomePage() {
               </div>
             </div>
           ) : (
-            bets.map(bet => {
+            bets.slice(0, 5).map(bet => {
               const badge = getStatusBadge(bet)
               return (
                 <div
@@ -247,7 +290,7 @@ export default function HomePage() {
                     ⛳
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--black)', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontSize: 'var(--text-md)', fontWeight: 600, color: 'var(--black)', marginBottom: 2, lineHeight: 1.3 }}>
                       {bet.courses?.name ?? 'Unknown Course'}
                     </div>
                     <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-light)' }}>
@@ -265,6 +308,7 @@ export default function HomePage() {
             })
           )}
         </div>
+        </section>
       </div>
 
       {/* Bottom tab bar */}
@@ -272,7 +316,7 @@ export default function HomePage() {
 
       {/* Toast notification */}
       {toast && (
-        <div className="toast gold" style={{ bottom: 'calc(var(--tab-bar-h) + 10px)', zIndex: 200 }}>
+        <div role="status" aria-live="polite" className="toast gold" style={{ bottom: 'calc(var(--tab-bar-h) + 10px)', zIndex: 200 }}>
           {toast}
         </div>
       )}
@@ -280,6 +324,9 @@ export default function HomePage() {
       {/* Profile sheet overlay */}
       {showProfile && (
         <div
+          role="dialog"
+          aria-label={editMode ? 'Edit profile' : 'Profile menu'}
+          aria-modal="true"
           style={{
             position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)',
             display: 'flex', alignItems: 'flex-end', zIndex: 100, borderRadius: 'inherit',
@@ -317,7 +364,7 @@ export default function HomePage() {
                       style={{
                         width: '100%', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)',
                         border: '1.5px solid #e0dbd0', fontSize: 'var(--text-body)', outline: 'none',
-                        boxSizing: 'border-box',
+                        boxSizing: 'border-box', color: 'var(--green-deep)',
                       }}
                     />
                   </div>
@@ -335,7 +382,7 @@ export default function HomePage() {
                       style={{
                         width: '100%', padding: 'var(--space-sm) var(--space-md)', borderRadius: 'var(--radius-sm)',
                         border: '1.5px solid #e0dbd0', fontSize: 'var(--text-body)', outline: 'none',
-                        boxSizing: 'border-box',
+                        boxSizing: 'border-box', color: 'var(--green-deep)',
                       }}
                     />
                   </div>

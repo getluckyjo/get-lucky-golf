@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 import type { Database } from '@/types/database'
@@ -26,8 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
+  const profileLoadedRef = useRef<string | null>(null)
 
-  async function loadProfile(userId: string) {
+  async function loadProfile(userId: string, force = false) {
+    // Skip if we already loaded for this user (dedup getSession + onAuthStateChange)
+    if (!force && profileLoadedRef.current === userId) return
+    profileLoadedRef.current = userId
     const { data } = await supabase
       .from('profiles')
       .select('*')
@@ -37,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function refreshProfile() {
-    if (user) await loadProfile(user.id)
+    if (user) await loadProfile(user.id, true)
   }
 
   useEffect(() => {
@@ -49,13 +53,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
     })
 
-    // Listen for auth changes
+    // Listen for auth changes (skips INITIAL_SESSION via dedup ref)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
         loadProfile(session.user.id)
       } else {
+        profileLoadedRef.current = null
         setProfile(null)
       }
       setLoading(false)

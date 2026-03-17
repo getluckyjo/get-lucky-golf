@@ -107,7 +107,7 @@ export default function SelectCoursePage() {
           <button className="back-btn" onClick={() => router.back()}>←</button>
         </div>
         <div className="signup-title-area" style={{ padding: 'var(--space-sm) var(--page-px) 4px' }}>
-          <h3 className="signup-title" style={{ fontSize: 'var(--text-xl)' }}>Select Course</h3>
+          <h3 className="signup-title" style={{ fontSize: 'var(--text-xl)', color: 'var(--green-deep)' }}>Select Course</h3>
         </div>
 
         <div className="course-search">

@@ -28,8 +28,8 @@ export async function requireAdmin() {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-      // In development, fall back to mock data so dashboard is viewable without login
-      if (process.env.NODE_ENV === 'development') {
+      // Dev bypass removed for security — require explicit ENABLE_MOCK_ADMIN=true
+      if (process.env.NODE_ENV === 'development' && process.env.ENABLE_MOCK_ADMIN === 'true') {
         return MOCK_ADMIN
       }
       return {
@@ -63,8 +63,8 @@ export async function requireAdmin() {
       error: null,
     }
   } catch {
-    // In development, fall back to mock on any auth error
-    if (process.env.NODE_ENV === 'development') {
+    // Dev bypass removed for security — require explicit ENABLE_MOCK_ADMIN=true
+    if (process.env.NODE_ENV === 'development' && process.env.ENABLE_MOCK_ADMIN === 'true') {
       return MOCK_ADMIN
     }
     return {

@@ -23,10 +23,20 @@ export default function RecordPage() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   const mimeTypeRef = useRef<string>('video/webm')
 
+  // Guard: require course + hole selection (must come through choose-stake flow)
+  useEffect(() => {
+    if (!selectedCourse || !selectedHole) {
+      router.replace('/select-course')
+    }
+  }, [selectedCourse, selectedHole, router])
+
   const holeLabel = selectedHole
     ? `Hole ${selectedHole.holeNumber} · Par ${selectedHole.par} · ${selectedHole.distanceMetres}m`
-    : 'Hole 7 · Par 3 · 142m'
-  const courseName = selectedCourse?.name ?? 'Boschenmeer Golf Club'
+    : ''
+  const courseName = selectedCourse?.name ?? ''
+
+  // Don't render until we know we have valid state
+  if (!selectedCourse || !selectedHole) return null
 
   function formatTime(s: number) {
     const m = Math.floor(s / 60).toString().padStart(2, '0')

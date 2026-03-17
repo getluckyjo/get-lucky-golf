@@ -13,6 +13,13 @@ export default function TryAgainPage() {
   const { profile } = useAuth()
   const [toast, setToast] = useState<string | null>(null)
 
+  // Guard: require an active bet session
+  useEffect(() => {
+    if (!betId) {
+      router.replace('/home')
+    }
+  }, [betId, router])
+
   const {
     canShareFiles,
     canShareText,
@@ -71,6 +78,8 @@ export default function TryAgainPage() {
   const stakeLabel = `R${tierData.stakeZAR.toLocaleString('en-ZA')}`
 
   const totalAttempts = profile?.total_attempts ?? 0
+
+  if (!betId) return null
 
   return (
     <PhoneFrame statusTheme="dark">

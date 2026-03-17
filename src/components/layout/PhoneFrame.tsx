@@ -1,12 +1,15 @@
 'use client'
 
+import SponsorBanner from './SponsorBanner'
+
 interface PhoneFrameProps {
   children: React.ReactNode
   statusTheme?: 'light' | 'dark'
   showStatus?: boolean
+  hideSponsor?: boolean
 }
 
-export default function PhoneFrame({ children }: PhoneFrameProps) {
+export default function PhoneFrame({ children, hideSponsor }: PhoneFrameProps) {
   return (
     <div
       className="phone-frame-outer"
@@ -23,7 +26,10 @@ export default function PhoneFrame({ children }: PhoneFrameProps) {
       <div className="phone-frame-shell" style={{ position: 'relative' }}>
         <div className="phone-notch" />
         <div className="phone-screen">
-          {children}
+          <main className="phone-screen-content">
+            {children}
+          </main>
+          {!hideSponsor && <SponsorBanner />}
         </div>
       </div>
 

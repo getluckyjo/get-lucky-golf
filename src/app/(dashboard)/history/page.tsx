@@ -95,15 +95,15 @@ export default function HistoryPage() {
   ).length
 
   return (
-    <PhoneFrame statusTheme="dark">
+    <PhoneFrame statusTheme="dark" hideSponsor>
       <div className="screen-history">
         {/* Header */}
-        <div className="history-header">
-          <div className="history-title">My Bets</div>
+        <header className="history-header">
+          <h1 className="history-title">My Bets</h1>
           <div style={{ fontSize: 'var(--text-body)', color: 'var(--gray-light)', fontWeight: 600 }}>
             {loading ? '—' : allBets.length} total
           </div>
-        </div>
+        </header>
 
         {/* Summary */}
         <div className="history-summary">
@@ -135,10 +135,11 @@ export default function HistoryPage() {
         </div>
 
         {/* Filter chips */}
-        <div className="history-filters">
+        <div className="history-filters" role="group" aria-label="Filter bets">
           {FILTERS.map(f => (
             <button
               key={f.key}
+              aria-pressed={filter === f.key}
               className={`filter-chip${filter === f.key ? ' active' : ''}`}
               onClick={() => handleFilter(f.key)}
             >

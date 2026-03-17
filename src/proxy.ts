@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/home', '/history', '/leaderboard', '/account']
+const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/home', '/history', '/leaderboard', '/account', '/terms', '/privacy', '/responsible-play']
 const PLAY_ROUTES = ['/select-course', '/choose-stake', '/record', '/confirm', '/result', '/verify']
 
 export async function proxy(request: NextRequest) {

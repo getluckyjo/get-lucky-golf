@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import { useBet } from '@/context/BetContext'
@@ -19,6 +19,13 @@ export default function ClaimPage() {
   const router = useRouter()
   const { betId, resetSession, videoBlob } = useBet()
   const [toast, setToast] = useState<string | null>(null)
+
+  // Guard: require an active bet session
+  useEffect(() => {
+    if (!betId) {
+      router.replace('/home')
+    }
+  }, [betId, router])
 
   const {
     canShareFiles,
@@ -116,6 +123,8 @@ export default function ClaimPage() {
     setLoading(false)
     router.push('/verify')
   }
+
+  if (!betId) return null
 
   return (
     <PhoneFrame statusTheme="dark">
