@@ -12,12 +12,14 @@ import {
   FileCheck2,
   Trophy,
   CircleDollarSign,
+  Star,
+  BadgeCheck,
 } from 'lucide-react'
 
 /* ── Slide data ── */
 const slides = [
   {
-    step: 'Step 1 of 3',
+    step: 'Step 1 of 4',
     icon: 'target' as const,
     bg: '/marketing/courses/st-francis-links.jpg',
     bgAlt: 'St Francis Links',
@@ -26,7 +28,7 @@ const slides = [
     cta: 'Next',
   },
   {
-    step: 'Step 2 of 3',
+    step: 'Step 2 of 4',
     icon: 'phone' as const,
     bg: '/marketing/courses/metropolitan.jpg',
     bgAlt: 'Metropolitan Golf Club',
@@ -35,12 +37,21 @@ const slides = [
     cta: 'Next',
   },
   {
-    step: 'Step 3 of 3',
+    step: 'Step 3 of 4',
     icon: 'shield' as const,
     bg: '/marketing/courses/zimbali.jpg',
     bgAlt: 'Zimbali Country Club',
     title: 'Every Prize\nFully Insured.',
     text: 'Prizes underwritten by Indwe Risk Services (FSP 3425). Payments secured by PayFast. Your win is guaranteed.',
+    cta: 'Next',
+  },
+  {
+    step: 'Step 4 of 4',
+    icon: 'club' as const,
+    bg: '/marketing/courses/paarl.jpg',
+    bgAlt: 'Paarl Golf Club',
+    title: 'Join the\nGet Lucky Club.',
+    text: 'Become a member for status, member-only perks and insured prizes — from R149/month. Optional, and you can join anytime from your account.',
     cta: 'Get Started',
   },
 ]
@@ -58,7 +69,7 @@ function GolferSwing({ size = 52 }: { size?: number }) {
   )
 }
 
-function SlideIllustration({ type }: { type: 'target' | 'phone' | 'shield' }) {
+function SlideIllustration({ type }: { type: 'target' | 'phone' | 'shield' | 'club' }) {
   if (type === 'target') {
     return (
       <div className="onboard-icon-group">
@@ -74,6 +85,15 @@ function SlideIllustration({ type }: { type: 'target' | 'phone' | 'shield' }) {
         <Smartphone size={52} {...mainIcon} />
         <span className="orbit orbit-tr"><Video size={20} {...subIcon} /></span>
         <span className="orbit orbit-bl"><MapPin size={18} {...subIcon} /></span>
+      </div>
+    )
+  }
+  if (type === 'club') {
+    return (
+      <div className="onboard-icon-group">
+        <Star size={52} {...mainIcon} />
+        <span className="orbit orbit-tr"><BadgeCheck size={20} {...subIcon} /></span>
+        <span className="orbit orbit-bl"><Trophy size={18} {...subIcon} /></span>
       </div>
     )
   }

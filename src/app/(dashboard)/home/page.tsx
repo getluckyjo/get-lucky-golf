@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import { useAuth } from '@/context/AuthContext'
+import { useMembership } from '@/hooks/useMembership'
+import { MEMBERSHIP_PLANS } from '@/lib/membership'
 import { createClient } from '@/lib/supabase/client'
 
 interface BetRecord {
@@ -53,6 +55,7 @@ function getStatusBadge(bet: BetRecord) {
 export default function HomePage() {
   const router = useRouter()
   const { user, profile, signOut, refreshProfile, loading: authLoading } = useAuth()
+  const { isMember } = useMembership()
   const [bets, setBets] = useState<BetRecord[]>([])
   const [betsLoading, setBetsLoading] = useState(true)
   const [showProfile, setShowProfile] = useState(false)
@@ -133,6 +136,31 @@ export default function HomePage() {
             Play Now →
           </button>
         </div>
+
+        {/* Membership upsell (non-members only) */}
+        {!isMember && (
+          <button
+            onClick={() => router.push('/membership')}
+            style={{
+              width: 'calc(100% - 2 * var(--page-px))', margin: '0 var(--page-px) var(--space-lg)',
+              textAlign: 'left', cursor: 'pointer',
+              background: 'linear-gradient(135deg, var(--green-deep), #2d6a3f)',
+              border: 'none', borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-md)', display: 'flex', alignItems: 'center', gap: 'var(--space-sm)',
+            }}
+          >
+            <span style={{ fontSize: 'var(--text-2xl)', flexShrink: 0 }}>⭐</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'white', marginBottom: 2 }}>
+                Join the Get Lucky Golf Club
+              </div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'rgba(255,255,255,0.78)' }}>
+                Member status &amp; perks from R{MEMBERSHIP_PLANS.monthly.priceZAR}/mo
+              </div>
+            </div>
+            <span style={{ fontSize: 'var(--text-md)', color: 'var(--gold)', fontWeight: 700 }}>→</span>
+          </button>
+        )}
 
         {/* How It Works */}
         <div style={{ padding: '0 var(--page-px)', marginBottom: 'var(--space-lg)' }}>

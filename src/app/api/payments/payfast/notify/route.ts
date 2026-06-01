@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { isMembershipPlan, type MembershipPlan } from '@/lib/membership'
 
 const MERCHANT_ID = (process.env.PAYFAST_MERCHANT_ID ?? '10000100').trim()
 const PASSPHRASE  = (process.env.PAYFAST_PASSPHRASE  ?? '').trim()
@@ -55,6 +56,118 @@ async function validateWithPayFast(rawBody: string): Promise<boolean> {
 }
 
 // ---------------------------------------------------------------------------
+// Membership ITN handler — processes recurring subscription events.
+// Writes go through the service-role admin client (bypasses RLS + the
+// membership guard trigger). Always best-effort; never throws to the caller.
+// ---------------------------------------------------------------------------
+function addMonths(date: Date, months: number): Date {
+  const d = new Date(date)
+  d.setMonth(d.getMonth() + months)
+  return d
+}
+
+async function handleMembershipNotification(params: Record<string, string>): Promise<void> {
+  const mPaymentId = params.m_payment_id ?? ''
+  const userId     = params.custom_str1 ?? ''
+  const status     = (params.payment_status ?? '').toUpperCase()
+  const token      = params.token ?? ''           // PayFast subscription token
+  const amountCents = params.amount_gross
+    ? Math.round(parseFloat(params.amount_gross) * 100)
+    : null
+
+  // Resolve plan from custom_str2, falling back to the m_payment_id prefix.
+  let plan: MembershipPlan | null = isMembershipPlan(params.custom_str2)
+    ? params.custom_str2
+    : null
+  if (!plan) {
+    if (mPaymentId.startsWith('gl_mem_annual')) plan = 'annual'
+    else if (mPaymentId.startsWith('gl_mem_monthly')) plan = 'monthly'
+  }
+
+  if (!userId) {
+    console.warn('[PayFast ITN] Membership event missing custom_str1 (user id) — skipping')
+    return
+  }
+
+  let supabase
+  try {
+    supabase = createAdminClient()
+  } catch (e) {
+    console.warn('[PayFast ITN] Service role key missing — cannot update membership:', e)
+    return
+  }
+
+  // Map PayFast status → our membership_status + audit event_type.
+  if (status === 'COMPLETE') {
+    // Determine first payment (signup) vs recurring (renewal): a profile with
+    // no stored subscription token yet is a fresh signup.
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('payfast_subscription_token, membership_started_at')
+      .eq('id', userId)
+      .maybeSingle()
+
+    const isSignup = !existing?.payfast_subscription_token && !existing?.membership_started_at
+    const now = new Date()
+    const renews = addMonths(now, plan === 'annual' ? 12 : 1)
+
+    const update: Record<string, unknown> = {
+      membership_status:   'active',
+      membership_renews_at: renews.toISOString(),
+    }
+    if (plan) update.membership_plan = plan
+    if (token) update.payfast_subscription_token = token
+    if (isSignup) update.membership_started_at = now.toISOString()
+
+    const { error } = await supabase.from('profiles').update(update).eq('id', userId)
+    if (error) console.warn('[PayFast ITN] Membership profile update warning:', error.message)
+
+    await supabase.from('membership_subscriptions').insert({
+      user_id: userId,
+      plan,
+      status: 'active',
+      event_type: isSignup ? 'signup' : 'renewal',
+      m_payment_id: mPaymentId,
+      pf_subscription_token: token || null,
+      amount_cents: amountCents,
+      raw: params,
+    })
+    console.log(`[PayFast ITN] ✅ Membership ${isSignup ? 'signup' : 'renewal'} — user ${userId} (${plan})`)
+    return
+  }
+
+  if (status === 'CANCELLED') {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ membership_status: 'cancelled' })
+      .eq('id', userId)
+    if (error) console.warn('[PayFast ITN] Membership cancel update warning:', error.message)
+
+    await supabase.from('membership_subscriptions').insert({
+      user_id: userId, plan, status: 'cancelled', event_type: 'cancelled',
+      m_payment_id: mPaymentId, pf_subscription_token: token || null,
+      amount_cents: amountCents, raw: params,
+    })
+    console.log(`[PayFast ITN] Membership cancelled — user ${userId}`)
+    return
+  }
+
+  // Any other status (FAILED, etc.) on a recurring charge → past_due.
+  const { error } = await supabase
+    .from('profiles')
+    .update({ membership_status: 'past_due' })
+    .eq('id', userId)
+  if (error) console.warn('[PayFast ITN] Membership past_due update warning:', error.message)
+
+  await supabase.from('membership_subscriptions').insert({
+    user_id: userId, plan, status: 'past_due', event_type: 'failed',
+    m_payment_id: mPaymentId, pf_subscription_token: token || null,
+    amount_cents: amountCents, raw: params,
+  })
+  console.log(`[PayFast ITN] Membership payment ${status || 'unknown'} → past_due — user ${userId}`)
+}
+
+// ---------------------------------------------------------------------------
 // POST /api/payments/payfast/notify  ← PayFast calls this, not your browser
 // ---------------------------------------------------------------------------
 export async function POST(request: NextRequest) {
@@ -103,6 +216,15 @@ export async function POST(request: NextRequest) {
     console.log(
       `[PayFast ITN] Status: ${params.payment_status} | m_payment_id: ${params.m_payment_id} | pf_payment_id: ${params.pf_payment_id} | amount: ${params.amount_gross}`,
     )
+
+    // ── 5a. Membership subscriptions branch ───────────────────────────────
+    // Recurring membership payments use an m_payment_id prefixed `gl_mem_`.
+    // These manage their own statuses (COMPLETE / CANCELLED / failed), so we
+    // handle them before the bet-only COMPLETE gate below.
+    if ((params.m_payment_id ?? '').startsWith('gl_mem_')) {
+      await handleMembershipNotification(params)
+      return new NextResponse('OK', { status: 200 })
+    }
 
     // Only process COMPLETE payments for DB updates
     if (params.payment_status !== 'COMPLETE') {

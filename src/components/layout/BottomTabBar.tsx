@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import SponsorBanner from './SponsorBanner'
 
-type ActiveTab = 'home' | 'history' | 'leaderboard' | 'account'
+type ActiveTab = 'home' | 'history' | 'leaderboard' | 'membership' | 'account'
 
 // SVG icons for cross-platform consistency (no emoji rendering differences)
 const Icons = {
@@ -34,6 +34,11 @@ const Icons = {
   play: (
     <span style={{ fontSize: 22, lineHeight: 1 }}>🏌️</span>
   ),
+  membership: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2l2.6 6.5L21 9l-5 4.3L17.5 20 12 16.5 6.5 20 8 13.3 3 9l6.4-.5z" />
+    </svg>
+  ),
   account: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -43,10 +48,10 @@ const Icons = {
 }
 
 const TABS = [
-  { key: 'home',        icon: Icons.home,        label: 'Home',    path: '/home' },
-  { key: 'history',     icon: Icons.history,      label: 'My Bets', path: '/history' },
+  { key: 'home',        icon: Icons.home,         label: 'Home',    path: '/home' },
   { key: 'leaderboard', icon: Icons.leaderboard,  label: 'Winners', path: '/leaderboard' },
   { key: 'play',        icon: Icons.play,         label: 'Play',    path: '/select-course' },
+  { key: 'membership',  icon: Icons.membership,   label: 'Club',    path: '/membership' },
   { key: 'account',     icon: Icons.account,      label: 'Account', path: '/account' },
 ] as const
 

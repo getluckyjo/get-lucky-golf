@@ -67,7 +67,7 @@ function checkRateLimit(request: NextRequest, pathname: string): NextResponse | 
 }
 
 // ── Route config ──────────────────────────────────────────────────────────
-const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/home', '/history', '/leaderboard', '/account', '/terms', '/privacy', '/responsible-play', '/app']
+const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/home', '/history', '/leaderboard', '/account', '/membership', '/terms', '/privacy', '/responsible-play', '/app']
 const PLAY_ROUTES = ['/select-course', '/choose-stake', '/record', '/confirm', '/result', '/verify']
 
 export async function proxy(request: NextRequest) {

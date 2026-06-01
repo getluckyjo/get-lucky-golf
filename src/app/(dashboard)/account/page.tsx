@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import { useAuth } from '@/context/AuthContext'
+import { useMembership } from '@/hooks/useMembership'
+import MemberBadge from '@/components/membership/MemberBadge'
+import { MEMBERSHIP_PLANS } from '@/lib/membership'
 import { createClient } from '@/lib/supabase/client'
 
 function getInitials(name: string | null | undefined, email: string | null | undefined) {
@@ -16,6 +19,7 @@ function getInitials(name: string | null | undefined, email: string | null | und
 export default function AccountPage() {
   const router = useRouter()
   const { user, profile, signOut, refreshProfile, loading } = useAuth()
+  const { isMember, status, plan, renewsAt } = useMembership()
 
   // Profile editing
   const [editingProfile, setEditingProfile] = useState(false)
@@ -293,6 +297,58 @@ export default function AccountPage() {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* ── Membership ── */}
+        <div style={{ padding: '0 var(--page-px)', marginBottom: 'var(--space-md)' }}>
+          {isMember ? (
+            <button
+              onClick={() => router.push('/membership')}
+              style={{
+                width: '100%', textAlign: 'left', cursor: 'pointer',
+                background: 'white', borderRadius: 'var(--radius-lg)', border: '1px solid #e8e4dc',
+                padding: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-md)',
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'var(--green-deep)' }}>Get Lucky Golf Club</span>
+                  <MemberBadge size="sm" />
+                </div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-light)' }}>
+                  {status === 'cancelled'
+                    ? `Access until ${renewsAt ? new Date(renewsAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}`
+                    : `${plan ? MEMBERSHIP_PLANS[plan].label : 'Active'} · renews ${renewsAt ? new Date(renewsAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) : '—'}`}
+                </div>
+              </div>
+              <span style={{ color: 'var(--gray-light)', fontSize: 'var(--text-sm)' }}>→</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => router.push('/membership')}
+              style={{
+                width: '100%', textAlign: 'left', cursor: 'pointer',
+                background: 'linear-gradient(135deg, var(--green-deep) 0%, #2d6a3f 100%)',
+                borderRadius: 'var(--radius-lg)', border: 'none',
+                padding: 'var(--space-lg)', display: 'flex', alignItems: 'center', gap: 'var(--space-md)',
+              }}
+            >
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 'var(--text-body)', fontWeight: 700, color: 'white', marginBottom: 4 }}>
+                  Become a Member
+                </div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'rgba(255,255,255,0.78)', lineHeight: 1.4 }}>
+                  Status, perks &amp; insured prizes from R{MEMBERSHIP_PLANS.monthly.priceZAR}/mo
+                </div>
+              </div>
+              <span style={{
+                flexShrink: 0, padding: '7px 14px', background: 'var(--gold)', color: '#3a2f12',
+                borderRadius: 'var(--radius-sm)', fontSize: 'var(--text-sm)', fontWeight: 700,
+              }}>
+                Join
+              </span>
+            </button>
+          )}
         </div>
 
         {/* ── Legal links ── */}
