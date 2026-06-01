@@ -1,85 +1,29 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, Check } from 'lucide-react'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import BottomTabBar from '@/components/layout/BottomTabBar'
 import MemberBadge from '@/components/membership/MemberBadge'
-import { useAuth } from '@/context/AuthContext'
 import { useMembership } from '@/hooks/useMembership'
-import { MEMBERSHIP_PLANS, MEMBERSHIP_PERKS, type MembershipPlan } from '@/lib/membership'
+import { MEMBERSHIP_PLANS, MEMBERSHIP_PERKS, MEMBERSHIP_FUNNEL_URL } from '@/lib/membership'
 
 function formatDate(iso: string | null) {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('en-ZA', { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+/** Pretty-print the funnel's plan_type, falling back gracefully. */
+function planLabel(plan: string | null) {
+  if (!plan) return '—'
+  const key = plan.toLowerCase()
+  if (key === 'monthly' || key === 'annual') return MEMBERSHIP_PLANS[key].label
+  return plan.charAt(0).toUpperCase() + plan.slice(1)
+}
+
 export default function MembershipPage() {
   const router = useRouter()
-  const { user, profile, refreshProfile } = useAuth()
-  const { isMember, isActive, status, plan, startedAt, renewsAt } = useMembership()
-
-  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan>('monthly')
-  const [loading, setLoading] = useState(false)
-  const [cancelling, setCancelling] = useState(false)
-  const [error, setError] = useState('')
-
-  async function startCheckout() {
-    if (!user) { router.push('/auth'); return }
-    setLoading(true)
-    setError('')
-    try {
-      const res = await fetch('/api/payments/payfast/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          plan: selectedPlan,
-          userName: profile?.name ?? user?.user_metadata?.full_name ?? '',
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok || !data?.redirectUrl || !data?.formFields) {
-        throw new Error(data?.error ?? 'Failed to start checkout')
-      }
-
-      const form = document.createElement('form')
-      form.method = 'POST'
-      form.action = data.redirectUrl
-      for (const [key, value] of Object.entries(data.formFields)) {
-        const input = document.createElement('input')
-        input.type = 'hidden'
-        input.name = key
-        input.value = String(value)
-        form.appendChild(input)
-      }
-      document.body.appendChild(form)
-      form.submit() // → PayFast hosted checkout
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-      setLoading(false)
-    }
-  }
-
-  async function cancelMembership() {
-    if (!confirm('Cancel your membership? You keep access until your current period ends.')) return
-    setCancelling(true)
-    setError('')
-    try {
-      const res = await fetch('/api/payments/membership/cancel', { method: 'POST' })
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({}))
-        throw new Error(d?.error ?? 'Could not cancel')
-      }
-      await refreshProfile()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setCancelling(false)
-    }
-  }
-
-  const cfg = MEMBERSHIP_PLANS[selectedPlan]
+  const { isMember, status, plan, joinedDate, foundingMember, loading } = useMembership()
 
   return (
     <PhoneFrame statusTheme="dark" hideSponsor>
@@ -121,7 +65,7 @@ export default function MembershipPage() {
           </div>
         </div>
 
-        {/* ── Member status (active/cancelled/past_due) ── */}
+        {/* ── Member status card (active members only) ── */}
         {isMember ? (
           <div style={{ padding: 'var(--space-lg) var(--page-px) 0' }}>
             <div style={{
@@ -135,10 +79,10 @@ export default function MembershipPage() {
                 <MemberBadge size="sm" />
               </div>
               {[
-                { label: 'Status', value: status === 'active' ? 'Active' : status === 'cancelled' ? 'Cancelled (ends soon)' : 'Payment due' },
-                { label: 'Plan', value: plan ? MEMBERSHIP_PLANS[plan].label : '—' },
-                { label: 'Member since', value: formatDate(startedAt) },
-                { label: status === 'cancelled' ? 'Access until' : 'Renews', value: formatDate(renewsAt) },
+                { label: 'Status', value: 'Active' },
+                { label: 'Plan', value: planLabel(plan) },
+                { label: 'Member since', value: formatDate(joinedDate) },
+                ...(foundingMember ? [{ label: 'Tier', value: 'Founding Member' }] : []),
               ].map((row, i, arr) => (
                 <div key={row.label} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -150,70 +94,59 @@ export default function MembershipPage() {
                 </div>
               ))}
 
-              {isActive && (
-                <button
-                  onClick={cancelMembership}
-                  disabled={cancelling}
-                  style={{
-                    width: '100%', marginTop: 'var(--space-md)', padding: 'var(--space-sm)',
-                    background: 'white', border: '1.5px solid #f0d0d0', borderRadius: 'var(--radius-md)',
-                    fontSize: 'var(--text-sm)', fontWeight: 600, color: '#c0392b', cursor: 'pointer',
-                    opacity: cancelling ? 0.6 : 1,
-                  }}
-                >
-                  {cancelling ? 'Cancelling…' : 'Cancel membership'}
-                </button>
-              )}
-              {status === 'past_due' && (
-                <button
-                  onClick={startCheckout}
-                  disabled={loading}
-                  className="btn-gold"
-                  style={{ width: '100%', marginTop: 'var(--space-md)', padding: 'var(--space-sm)', fontWeight: 700 }}
-                >
-                  {loading ? 'Redirecting…' : 'Update payment'}
-                </button>
-              )}
+              <a
+                href={MEMBERSHIP_FUNNEL_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'block', width: '100%', marginTop: 'var(--space-md)', padding: 'var(--space-sm)',
+                  background: 'white', border: '1.5px solid #e0dbd0', borderRadius: 'var(--radius-md)',
+                  fontSize: 'var(--text-sm)', fontWeight: 600, color: 'var(--green-deep)',
+                  textAlign: 'center', textDecoration: 'none', boxSizing: 'border-box',
+                }}
+              >
+                Manage membership →
+              </a>
             </div>
           </div>
         ) : (
-          /* ── Plan selector ── */
-          <div style={{ padding: 'var(--space-lg) var(--page-px) 0' }}>
-            <div style={{ display: 'flex', gap: 10 }}>
-              {(['monthly', 'annual'] as MembershipPlan[]).map(p => {
-                const pc = MEMBERSHIP_PLANS[p]
-                const active = selectedPlan === p
-                return (
-                  <button
-                    key={p}
-                    onClick={() => setSelectedPlan(p)}
-                    style={{
-                      flex: 1, textAlign: 'left', cursor: 'pointer',
-                      background: 'white',
-                      border: active ? '2px solid var(--gold)' : '1.5px solid #e8e4dc',
-                      borderRadius: 'var(--radius-lg)', padding: 'var(--space-md)',
-                      position: 'relative',
-                    }}
-                  >
-                    {p === 'annual' && (
-                      <span style={{
-                        position: 'absolute', top: -9, right: 10, background: 'var(--gold)',
-                        color: '#3a2f12', fontSize: 9, fontWeight: 800, padding: '2px 8px',
-                        borderRadius: 10, letterSpacing: '0.03em',
-                      }}>
-                        BEST VALUE
-                      </span>
-                    )}
-                    <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--green-deep)' }}>{pc.label}</div>
-                    <div style={{ fontFamily: 'Poster Gothic, sans-serif', fontSize: 'var(--text-xl)', fontWeight: 900, color: 'var(--green-deep)', marginTop: 2 }}>
-                      R{pc.priceZAR.toLocaleString('en-ZA')}
+          /* ── Plan preview (non-members) ── */
+          !loading && (
+            <div style={{ padding: 'var(--space-lg) var(--page-px) 0' }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                {(['monthly', 'annual'] as const).map(p => {
+                  const pc = MEMBERSHIP_PLANS[p]
+                  return (
+                    <div
+                      key={p}
+                      style={{
+                        flex: 1, textAlign: 'left',
+                        background: 'white',
+                        border: p === 'annual' ? '2px solid var(--gold)' : '1.5px solid #e8e4dc',
+                        borderRadius: 'var(--radius-lg)', padding: 'var(--space-md)',
+                        position: 'relative',
+                      }}
+                    >
+                      {p === 'annual' && (
+                        <span style={{
+                          position: 'absolute', top: -9, right: 10, background: 'var(--gold)',
+                          color: '#3a2f12', fontSize: 9, fontWeight: 800, padding: '2px 8px',
+                          borderRadius: 10, letterSpacing: '0.03em',
+                        }}>
+                          BEST VALUE
+                        </span>
+                      )}
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 700, color: 'var(--green-deep)' }}>{pc.label}</div>
+                      <div style={{ fontFamily: 'Poster Gothic, sans-serif', fontSize: 'var(--text-xl)', fontWeight: 900, color: 'var(--green-deep)', marginTop: 2 }}>
+                        R{pc.priceZAR.toLocaleString('en-ZA')}
+                      </div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-light)' }}>{pc.cadence}</div>
                     </div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--gray-light)' }}>{pc.cadence}</div>
-                  </button>
-                )
-              })}
+                  )
+                })}
+              </div>
             </div>
-          </div>
+          )
         )}
 
         {/* ── Perks ── */}
@@ -239,32 +172,31 @@ export default function MembershipPage() {
           </div>
         </div>
 
-        {error && (
-          <div style={{ padding: '12px var(--page-px) 0', color: '#c0392b', fontSize: 'var(--text-sm)', textAlign: 'center' }}>
-            {error}
-          </div>
-        )}
-
-        {/* ── Sticky CTA (join) ── */}
-        {!isMember && (
+        {/* ── Sticky CTA (join → external funnel) ── */}
+        {!isMember && !loading && (
           <div style={{ padding: 'var(--space-lg) var(--page-px) var(--tab-bar-pb)' }}>
-            <button
-              onClick={startCheckout}
-              disabled={loading}
+            <a
+              href={MEMBERSHIP_FUNNEL_URL}
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn-gold"
-              style={{ width: '100%', padding: '16px', fontSize: 'var(--text-base)', fontWeight: 700, opacity: loading ? 0.8 : 1 }}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '100%', padding: '16px', fontSize: 'var(--text-base)', fontWeight: 700,
+                textDecoration: 'none', boxSizing: 'border-box',
+              }}
             >
-              {loading ? 'Redirecting to payment…' : `Join for R${cfg.priceZAR.toLocaleString('en-ZA')} ${cfg.cadence}`}
-            </button>
+              Join the Club →
+            </a>
             <p style={{ fontSize: 10, color: 'var(--gray-light)', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
-              Cancel anytime, no lock-in · Secure recurring payment via PayFast
+              Secure signup at membership.getluckygolfclub.com
               <br />
-              Prizes fully insured (FSP 3425)
+              Prizes fully insured · Underwritten by Indwe Risk Services
             </p>
           </div>
         )}
 
-        {isMember && <div style={{ height: 'var(--tab-bar-pb)' }} />}
+        {(isMember || loading) && <div style={{ height: 'var(--tab-bar-pb)' }} />}
       </div>
 
       <BottomTabBar active="membership" />

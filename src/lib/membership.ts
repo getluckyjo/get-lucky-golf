@@ -1,60 +1,38 @@
 // ---------------------------------------------------------------------------
-// Get Lucky Golf — Membership plan config (single source of truth)
+// Get Lucky Golf — Membership display config
 //
-// Prices mirror the external funnel (membership.getluckygolfclub.com):
-//   Monthly  R149/month
-//   Annual   "Save R298" vs monthly → 12 × R149 − R298 = R1 490/year
-//            ⚠️ The external page shows the saving, not a standalone annual
-//            price. CONFIRM the exact annual figure before going live.
-//
-// PayFast `frequency`: 3 = monthly, 6 = annual.
+// Membership is owned and billed by the external funnel
+// (membership.getluckygolfclub.com). This app only DISPLAYS plan/pricing as
+// marketing and hands signups off to the funnel — it does not bill in-app.
+// Prices mirror the funnel: Monthly R149/month, Annual ≈ R1 490/year.
+// ⚠️ Confirm the exact annual figure against the funnel before relying on it.
 // ---------------------------------------------------------------------------
 export type MembershipPlan = 'monthly' | 'annual'
 
 export interface MembershipPlanConfig {
   plan: MembershipPlan
-  /** Rand amount, two-decimal string for PayFast (e.g. "149.00"). */
-  amount: string
   /** Whole-rand integer for display. */
   priceZAR: number
-  /** Cents — stored in the audit table. */
-  amountCents: number
-  /** PayFast billing frequency code. */
-  frequency: 3 | 6
   label: string
   cadence: string
-  itemName: string
 }
 
 export const MEMBERSHIP_PLANS: Record<MembershipPlan, MembershipPlanConfig> = {
-  monthly: {
-    plan: 'monthly',
-    amount: '149.00',
-    priceZAR: 149,
-    amountCents: 14900,
-    frequency: 3,
-    label: 'Monthly',
-    cadence: 'per month',
-    itemName: 'Get Lucky Golf Club - Monthly Membership',
-  },
-  annual: {
-    plan: 'annual',
-    amount: '1490.00',
-    priceZAR: 1490,
-    amountCents: 149000,
-    frequency: 6,
-    label: 'Annual',
-    cadence: 'per year',
-    itemName: 'Get Lucky Golf Club - Annual Membership',
-  },
+  monthly: { plan: 'monthly', priceZAR: 149,  label: 'Monthly', cadence: 'per month' },
+  annual:  { plan: 'annual',  priceZAR: 1490, label: 'Annual',  cadence: 'per year' },
 }
 
 export function isMembershipPlan(value: unknown): value is MembershipPlan {
   return value === 'monthly' || value === 'annual'
 }
 
-/** Perks shown in-app. Marketing copy mirrored from the external funnel —
- *  membership is cosmetic/status only, it does not change bet pricing. */
+/**
+ * The external funnel where members actually sign up and are billed.
+ * The in-app "Join" CTAs deep-link here.
+ */
+export const MEMBERSHIP_FUNNEL_URL = 'https://membership.getluckygolfclub.com/join/get-lucky'
+
+/** Perks shown in-app. Marketing copy mirrored from the external funnel. */
 export const MEMBERSHIP_PERKS: string[] = [
   'Member badge & “Member since” status on your profile',
   'R100,000 cash prize for every verified hole-in-one',

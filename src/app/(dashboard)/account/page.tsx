@@ -19,7 +19,7 @@ function getInitials(name: string | null | undefined, email: string | null | und
 export default function AccountPage() {
   const router = useRouter()
   const { user, profile, signOut, refreshProfile, loading } = useAuth()
-  const { isMember, status, plan, renewsAt } = useMembership()
+  const { isMember, plan, joinedDate } = useMembership()
 
   // Profile editing
   const [editingProfile, setEditingProfile] = useState(false)
@@ -316,9 +316,16 @@ export default function AccountPage() {
                   <MemberBadge size="sm" />
                 </div>
                 <div style={{ fontSize: 'var(--text-sm)', color: 'var(--gray-light)' }}>
-                  {status === 'cancelled'
-                    ? `Access until ${renewsAt ? new Date(renewsAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' }) : '—'}`
-                    : `${plan ? MEMBERSHIP_PLANS[plan].label : 'Active'} · renews ${renewsAt ? new Date(renewsAt).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' }) : '—'}`}
+                  {(() => {
+                    const planKey = plan?.toLowerCase()
+                    const planText = planKey === 'monthly' || planKey === 'annual'
+                      ? MEMBERSHIP_PLANS[planKey].label
+                      : 'Active'
+                    const since = joinedDate
+                      ? ` · member since ${new Date(joinedDate).toLocaleDateString('en-ZA', { month: 'short', year: 'numeric' })}`
+                      : ''
+                    return `${planText}${since}`
+                  })()}
                 </div>
               </div>
               <span style={{ color: 'var(--gray-light)', fontSize: 'var(--text-sm)' }}>→</span>

@@ -23,11 +23,6 @@ export interface Database {
           is_admin: boolean
           suspended_at: string | null
           suspended_reason: string | null
-          membership_status: 'none' | 'active' | 'past_due' | 'cancelled'
-          membership_plan: 'monthly' | 'annual' | null
-          membership_started_at: string | null
-          membership_renews_at: string | null
-          payfast_subscription_token: string | null
           created_at: string
         }
         Insert: {
@@ -43,11 +38,6 @@ export interface Database {
           is_admin?: boolean
           suspended_at?: string | null
           suspended_reason?: string | null
-          membership_status?: 'none' | 'active' | 'past_due' | 'cancelled'
-          membership_plan?: 'monthly' | 'annual' | null
-          membership_started_at?: string | null
-          membership_renews_at?: string | null
-          payfast_subscription_token?: string | null
           created_at?: string
         }
         Update: {
@@ -63,51 +53,39 @@ export interface Database {
           is_admin?: boolean
           suspended_at?: string | null
           suspended_reason?: string | null
-          membership_status?: 'none' | 'active' | 'past_due' | 'cancelled'
-          membership_plan?: 'monthly' | 'annual' | null
-          membership_started_at?: string | null
-          membership_renews_at?: string | null
-          payfast_subscription_token?: string | null
           created_at?: string
         }
       }
-      membership_subscriptions: {
+      // Owned & written by the external membership funnel
+      // (membership.getluckygolfclub.com). This app only READS it (by email)
+      // to surface member status — it never writes here.
+      members: {
         Row: {
           id: string
-          user_id: string
-          plan: 'monthly' | 'annual' | null
-          status: 'none' | 'active' | 'past_due' | 'cancelled'
-          event_type: 'signup' | 'renewal' | 'cancelled' | 'failed'
-          m_payment_id: string | null
-          pf_subscription_token: string | null
-          amount_cents: number | null
-          raw: Json | null
-          created_at: string
+          full_name: string
+          email: string
+          mobile: string
+          club_id: string | null
+          handicap: number | null
+          subscription_status: string | null
+          payfast_payment_id: string | null
+          payfast_token: string | null
+          joined_date: string | null
+          last_payment_date: string | null
+          cancelled_date: string | null
+          cancellation_reason: string | null
+          bag_tag_status: string | null
+          is_founding_member: boolean | null
+          referral_code: string | null
+          referred_by: string | null
+          plan_type: string
+          indwe_credit_applied_until: string | null
+          indwe_lead_id: string | null
+          created_at: string | null
+          updated_at: string | null
         }
-        Insert: {
-          id?: string
-          user_id: string
-          plan?: 'monthly' | 'annual' | null
-          status?: 'none' | 'active' | 'past_due' | 'cancelled'
-          event_type: 'signup' | 'renewal' | 'cancelled' | 'failed'
-          m_payment_id?: string | null
-          pf_subscription_token?: string | null
-          amount_cents?: number | null
-          raw?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          plan?: 'monthly' | 'annual' | null
-          status?: 'none' | 'active' | 'past_due' | 'cancelled'
-          event_type?: 'signup' | 'renewal' | 'cancelled' | 'failed'
-          m_payment_id?: string | null
-          pf_subscription_token?: string | null
-          amount_cents?: number | null
-          raw?: Json | null
-          created_at?: string
-        }
+        Insert: never
+        Update: never
       }
       courses: {
         Row: {

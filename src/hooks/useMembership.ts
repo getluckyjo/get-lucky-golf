@@ -1,48 +1,64 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
-import type { MembershipPlan } from '@/lib/membership'
-
-export type MembershipStatus = 'none' | 'active' | 'past_due' | 'cancelled'
 
 export interface MembershipState {
-  /** True while the member still has access (active OR cancelled-but-not-yet-expired). */
+  /** True when the funnel's `members` row for this user is an active member. */
   isMember: boolean
-  status: MembershipStatus
-  plan: MembershipPlan | null
-  startedAt: string | null
-  renewsAt: string | null
-  /** True only for status === 'active' (billing on, not cancelled/past_due). */
-  isActive: boolean
+  /** Raw funnel subscription_status (lowercased), or 'none' / 'unknown'. */
+  status: string
+  /** Funnel plan_type, verbatim (e.g. 'monthly', 'annual', or whatever the funnel stores). */
+  plan: string | null
+  /** When they joined the club (members.joined_date). */
+  joinedDate: string | null
+  cancelledDate: string | null
+  foundingMember: boolean
+  /** True while the status lookup is in flight. */
+  loading: boolean
+}
+
+const NON_MEMBER: Omit<MembershipState, 'loading'> = {
+  isMember: false,
+  status: 'none',
+  plan: null,
+  joinedDate: null,
+  cancelledDate: null,
+  foundingMember: false,
 }
 
 /**
- * Reads membership state from the authenticated profile. Membership is the
- * server's source of truth (written only by the PayFast ITN webhook); this
- * hook just surfaces it. A `cancelled` member keeps access until renews_at.
+ * Reads the signed-in user's membership status from the external funnel's
+ * `members` table via the read-only `/api/membership/status` endpoint.
+ *
+ * Membership is owned/billed by the funnel (membership.getluckygolfclub.com);
+ * this app only reflects status and hands new signups off to the funnel — it
+ * never writes to the billing tables.
  */
 export function useMembership(): MembershipState {
-  const { profile } = useAuth()
+  const { user } = useAuth()
+  const [state, setState] = useState<MembershipState>({ ...NON_MEMBER, loading: true })
 
-  const status = (profile?.membership_status ?? 'none') as MembershipStatus
-  const renewsAt = profile?.membership_renews_at ?? null
+  useEffect(() => {
+    if (!user) {
+      setState({ ...NON_MEMBER, loading: false })
+      return
+    }
 
-  // Snapshot "now" once at mount via a lazy initializer so render stays pure
-  // (no Date.now() call during render). Only the cancelled-but-not-yet-expired
-  // case reads this; active members don't depend on it.
-  const [now] = useState(() => Date.now())
+    let cancelled = false
+    setState(s => ({ ...s, loading: true }))
 
-  const notExpired = renewsAt ? new Date(renewsAt).getTime() > now : false
-  const isActive = status === 'active'
-  const isMember = isActive || (status === 'cancelled' && notExpired)
+    fetch('/api/membership/status')
+      .then(res => (res.ok ? res.json() : NON_MEMBER))
+      .then(data => {
+        if (!cancelled) setState({ ...NON_MEMBER, ...data, loading: false })
+      })
+      .catch(() => {
+        if (!cancelled) setState({ ...NON_MEMBER, loading: false })
+      })
 
-  return {
-    isMember,
-    isActive,
-    status,
-    plan: (profile?.membership_plan ?? null) as MembershipPlan | null,
-    startedAt: profile?.membership_started_at ?? null,
-    renewsAt,
-  }
+    return () => { cancelled = true }
+  }, [user])
+
+  return state
 }
