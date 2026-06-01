@@ -61,14 +61,14 @@ function AuthForm() {
           </button>
 
           <p className="auth-social-proof">Join 15,000+ golfers already playing</p>
+        </div>
 
-          <div className="auth-content-footer">
-            <p className="auth-terms">
-              By continuing, you agree to our{' '}
-              <a href="/terms" className="auth-terms-link">Terms of Service</a> and{' '}
-              <a href="/privacy" className="auth-terms-link">Privacy Policy</a>
-            </p>
-          </div>
+        <div className="auth-content-footer">
+          <p className="auth-terms">
+            By continuing, you agree to our{' '}
+            <a href="/terms" className="auth-terms-link">Terms of Service</a> and{' '}
+            <a href="/privacy" className="auth-terms-link">Privacy Policy</a>
+          </p>
         </div>
       </div>
     </PhoneFrame>
