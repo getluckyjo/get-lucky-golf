@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import PhoneFrame from '@/components/layout/PhoneFrame'
 import {
   Smartphone,
@@ -18,6 +19,8 @@ const slides = [
   {
     step: 'Step 1 of 3',
     icon: 'target' as const,
+    bg: '/marketing/courses/st-francis-links.jpg',
+    bgAlt: 'St Francis Links',
     title: 'Your Hole-in-One\nCould Pay R1M.',
     text: 'Pick any par-3 at 100+ South African courses. Stake from R50 to R1 000 — land the shot, win up to R1 million.',
     cta: 'Next',
@@ -25,6 +28,8 @@ const slides = [
   {
     step: 'Step 2 of 3',
     icon: 'phone' as const,
+    bg: '/marketing/courses/metropolitan.jpg',
+    bgAlt: 'Metropolitan Golf Club',
     title: 'Film It.\nSwing It.\nWin It.',
     text: 'Choose your course, select your stake, and hit record before you swing. Three taps and you\'re playing for the big prize.',
     cta: 'Next',
@@ -32,6 +37,8 @@ const slides = [
   {
     step: 'Step 3 of 3',
     icon: 'shield' as const,
+    bg: '/marketing/courses/zimbali.jpg',
+    bgAlt: 'Zimbali Country Club',
     title: 'Every Prize\nFully Insured.',
     text: 'Prizes underwritten by Indwe Risk Services (FSP 3425). Payments secured by PayFast. Your win is guaranteed.',
     cta: 'Get Started',
@@ -140,6 +147,16 @@ export default function OnboardingPage() {
       <div className="screen-onboard" {...swipe}>
         {/* Hero section */}
         <div className="onboard-hero">
+          <Image
+            key={slide.bg}
+            src={slide.bg}
+            alt={slide.bgAlt}
+            fill
+            priority
+            sizes="430px"
+            className="onboard-hero-photo"
+          />
+          <div className="onboard-hero-overlay" aria-hidden />
           <SlideIllustration type={slide.icon} />
           <button className="onboard-skip" onClick={finish}>
             Skip

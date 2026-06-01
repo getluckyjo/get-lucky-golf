@@ -311,8 +311,25 @@ body {
   background: linear-gradient(165deg, #142619, #335231 60%, #4a7a3d);
   position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
 }
+/* Course photo behind the icons for depth */
+.onboard-hero-photo {
+  position: absolute; inset: 0; z-index: 0;
+  object-fit: cover;
+  animation: onboardPhotoIn 0.6s ease both;
+}
+@keyframes onboardPhotoIn {
+  from { opacity: 0; transform: scale(1.08); }
+  to   { opacity: 1; transform: scale(1); }
+}
+/* Brand-green wash keeps icons legible and ties the photo to the palette */
+.onboard-hero-overlay {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(115% 85% at 50% 40%, rgba(15,29,16,0.55), rgba(15,29,16,0.80) 80%),
+    linear-gradient(165deg, rgba(20,38,25,0.88), rgba(51,82,49,0.66) 55%, rgba(74,122,61,0.58));
+}
 .onboard-hero::after {
-  content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+  content: ''; position: absolute; bottom: -1px; left: 0; right: 0; z-index: 1;
   height: 24px; background: var(--cream-light); border-radius: 20px 20px 0 0;
 }
 .onboard-hero-logo {
