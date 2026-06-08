@@ -122,7 +122,12 @@ export async function POST(request: NextRequest) {
     // ── 6. Update the bet record ──────────────────────────────────────────
     // m_payment_id (our reference) was stored as payment_intent_id at bet creation.
     // We swap it for PayFast's own pf_payment_id so we can reconcile payouts later.
-    // We also explicitly set status = 'active' as a belt-and-suspenders confirmation.
+    //
+    // IMPORTANT: we deliberately do NOT write `status` here. Bets are created with
+    // status 'active' by /api/bets/create, so re-affirming 'active' is redundant —
+    // and a late ITN (arriving after the player has already taken their shot) would
+    // otherwise overwrite a resolved result ('miss'/'claimed'/'verified'/'paid')
+    // back to 'active'. The ITN only confirms payment; it must never clobber play.
     const mPaymentId  = params.m_payment_id  ?? ''
     const pfPaymentId = params.pf_payment_id ?? ''
 
@@ -132,10 +137,7 @@ export async function POST(request: NextRequest) {
 
         const { error, data } = await supabase
           .from('bets')
-          .update({
-            payment_intent_id: pfPaymentId || mPaymentId,
-            status:            'active',   // re-confirm payment is good
-          })
+          .update({ payment_intent_id: pfPaymentId || mPaymentId })
           .eq('payment_intent_id', mPaymentId)
           .select('id')
 
