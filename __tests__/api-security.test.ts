@@ -36,12 +36,6 @@ describe('BET_TIERS', () => {
     }
   })
 
-  it('exactly one tier is marked popular', () => {
-    const popular = BET_TIERS.filter(t => t.isPopular)
-    expect(popular).toHaveLength(1)
-    expect(popular[0].tier).toBe('tier_2')
-  })
-
   it('stake * multiplier = win for each tier', () => {
     for (const tier of BET_TIERS) {
       expect(tier.stakeZAR * tier.multiplier).toBe(tier.winZAR)

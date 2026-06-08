@@ -156,11 +156,10 @@ export default function ChooseStakePage() {
           {BET_TIERS.map(tier => (
             <div
               key={tier.tier}
-              className={`bet-card${selected === tier.tier ? ' selected' : ''}${tier.isPopular ? ' popular' : ''}`}
+              className={`bet-card${selected === tier.tier ? ' selected' : ''}`}
               onClick={() => !loading && handleSelectTier(tier.tier)}
               style={{ opacity: loading ? 0.6 : 1, pointerEvents: loading ? 'none' : 'auto' }}
             >
-              {tier.isPopular && <div className="bet-popular-tag">Most Popular</div>}
               <div className="bet-stake">
                 <div className="bet-stake-amount">R{tier.stakeZAR.toLocaleString('en-ZA')}</div>
                 <div className="bet-stake-label">Stake</div>
