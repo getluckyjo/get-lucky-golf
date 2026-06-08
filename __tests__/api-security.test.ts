@@ -17,12 +17,12 @@ import { BET_TIERS } from '@/lib/tiers'
 
 describe('BET_TIERS', () => {
   it('has exactly 5 tiers', () => {
-    expect(BET_TIERS).toHaveLength(5)
+    expect(BET_TIERS).toHaveLength(6)
   })
 
   it('each tier has required fields', () => {
     for (const tier of BET_TIERS) {
-      expect(tier.tier).toMatch(/^tier_[1-5]$/)
+      expect(tier.tier).toMatch(/^tier_[1-6]$/)
       expect(tier.stakeZAR).toBeGreaterThan(0)
       expect(tier.winZAR).toBeGreaterThan(tier.stakeZAR)
       expect(tier.multiplier).toBeGreaterThanOrEqual(500)
@@ -36,9 +36,10 @@ describe('BET_TIERS', () => {
     }
   })
 
-  it('stake * multiplier = win for each tier', () => {
+  it('displayed multiplier matches win / stake (rounded) for each tier', () => {
+    // Most tiers have an exact integer multiplier; R150→R100,000 rounds to 667×.
     for (const tier of BET_TIERS) {
-      expect(tier.stakeZAR * tier.multiplier).toBe(tier.winZAR)
+      expect(tier.multiplier).toBe(Math.round(tier.winZAR / tier.stakeZAR))
     }
   })
 })
@@ -345,6 +346,7 @@ describe('Course Seed Data Integrity', () => {
     const TIER_ZAR: Record<string, number> = {
       tier_1: 50,
       tier_2: 100,
+      tier_6: 150,
       tier_3: 250,
       tier_4: 500,
       tier_5: 1000,

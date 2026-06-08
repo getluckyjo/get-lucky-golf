@@ -18,10 +18,12 @@ const client = new pg.Client(
 
 try {
   await client.connect()
-  console.log('Connected. Running', file, 'in a transaction...')
-  await client.query('begin')
+  // ALTER TYPE ... ADD VALUE and a few other statements can't run in a tx — set NO_TX=1.
+  const useTx = process.env.NO_TX !== '1'
+  console.log('Connected. Running', file, useTx ? 'in a transaction...' : '(no transaction)...')
+  if (useTx) await client.query('begin')
   const res = await client.query(sql)
-  await client.query('commit')
+  if (useTx) await client.query('commit')
   // Print the last SELECT result set (the verify query) if present
   const last = Array.isArray(res) ? res[res.length - 1] : res
   if (last?.rows?.length) {

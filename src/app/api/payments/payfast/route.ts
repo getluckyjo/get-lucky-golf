@@ -23,6 +23,7 @@ const REDIRECT_URL = SANDBOX
 const TIER_ZAR: Record<string, { amount: string; itemName: string }> = {
   tier_1: { amount: '50.00',   itemName: 'Get Lucky Golf - R50 Entry'   },
   tier_2: { amount: '100.00',  itemName: 'Get Lucky Golf - R100 Entry'  },
+  tier_6: { amount: '150.00',  itemName: 'Get Lucky Golf - R150 Entry'  },
   tier_3: { amount: '250.00',  itemName: 'Get Lucky Golf - R250 Entry'  },
   tier_4: { amount: '500.00',  itemName: 'Get Lucky Golf - R500 Entry'  },
   tier_5: { amount: '1000.00', itemName: 'Get Lucky Golf - R1000 Entry' },
