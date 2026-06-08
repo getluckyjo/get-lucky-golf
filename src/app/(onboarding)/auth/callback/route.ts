@@ -17,10 +17,10 @@ export async function GET(request: NextRequest) {
     if (!error) {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
-        // Check if this is a new user (onboarding not yet done)
+        // Check onboarding + age-verification state
         const { data: profile } = await supabase
           .from('profiles')
-          .select('onboarding_done')
+          .select('onboarding_done, age_verified_at')
           .eq('id', user.id)
           .single()
 
@@ -42,6 +42,12 @@ export async function GET(request: NextRequest) {
               body: JSON.stringify({ email, name }),
             }).catch((err) => console.error('[auth-callback] Welcome email failed:', err))
           }
+        }
+
+        // Gate: anyone who hasn't passed the 18+ age check goes there first,
+        // before they can reach any real-money flow.
+        if (!profile?.age_verified_at) {
+          return NextResponse.redirect(`${origin}/age-check`)
         }
       }
       return NextResponse.redirect(`${origin}${next}`)

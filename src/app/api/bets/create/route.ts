@@ -24,6 +24,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
+    // ── Age gate: no real-money bet without a passed 18+ verification ──
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('age_verified_at')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile?.age_verified_at) {
+      return NextResponse.json(
+        { error: 'Age verification required', code: 'AGE_NOT_VERIFIED' },
+        { status: 403 },
+      )
+    }
+
     // ── Idempotency guard: return existing bet if payment already processed ──
     const { data: existing } = await supabase
       .from('bets')

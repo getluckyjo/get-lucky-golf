@@ -23,6 +23,9 @@ export interface Database {
           is_admin: boolean
           suspended_at: string | null
           suspended_reason: string | null
+          date_of_birth: string | null
+          age_verified_at: string | null
+          terms_accepted_at: string | null
           created_at: string
         }
         Insert: {
@@ -38,6 +41,9 @@ export interface Database {
           is_admin?: boolean
           suspended_at?: string | null
           suspended_reason?: string | null
+          date_of_birth?: string | null
+          age_verified_at?: string | null
+          terms_accepted_at?: string | null
           created_at?: string
         }
         Update: {
@@ -53,6 +59,9 @@ export interface Database {
           is_admin?: boolean
           suspended_at?: string | null
           suspended_reason?: string | null
+          date_of_birth?: string | null
+          age_verified_at?: string | null
+          terms_accepted_at?: string | null
           created_at?: string
         }
       }
