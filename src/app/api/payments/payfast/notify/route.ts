@@ -7,13 +7,21 @@ const MERCHANT_ID = (process.env.PAYFAST_MERCHANT_ID ?? '10000100').trim()
 const PASSPHRASE  = (process.env.PAYFAST_PASSPHRASE  ?? '').trim()
 const SANDBOX     = (process.env.PAYFAST_SANDBOX ?? 'true').trim() !== 'false'
 
-// PayFast's published source IP ranges (CIDR /28 = 16 IPs each)
-// Ref: https://developers.payfast.co.za/docs#notify
-// Block 1: 197.97.145.144/28  → .144 – .159
-// Block 2: 41.74.179.192/28   → .192 – .207
+// PayFast's published ITN source IP ranges.
+// Ref: https://support.payfast.co.za/portal/en/kb/articles/what-ip-addresses-does-payfast-use
+//   197.97.145.144/28  → .144 – .159   (16)
+//   41.74.179.192/27   → .192 – .223   (32)
+//   102.216.36.0/28    → .0   – .15    (16)
+//   102.216.36.128/28  → .128 – .143   (16)
+//   144.126.193.139    → single IP
+// NOTE: used only as a soft/log signal — see the check below. The MD5 signature
+// and the phone-home validate call are the actual authentication.
 const VALID_IPS = new Set([
   ...Array.from({ length: 16 }, (_, i) => `197.97.145.${144 + i}`),
-  ...Array.from({ length: 16 }, (_, i) => `41.74.179.${192 + i}`),
+  ...Array.from({ length: 32 }, (_, i) => `41.74.179.${192 + i}`),
+  ...Array.from({ length: 16 }, (_, i) => `102.216.36.${i}`),
+  ...Array.from({ length: 16 }, (_, i) => `102.216.36.${128 + i}`),
+  '144.126.193.139',
 ])
 
 const PF_VALIDATE_URL = SANDBOX
@@ -63,6 +71,8 @@ export async function POST(request: NextRequest) {
     const params  = Object.fromEntries(new URLSearchParams(rawBody))
 
     // ── 1. IP whitelist (production only — sandbox IPs vary) ──────────────
+    // VALID_IPS covers PayFast's full current published ranges. If PayFast adds
+    // new ranges in future, real ITNs will 403 here — update VALID_IPS then.
     if (!SANDBOX) {
       // On Vercel/trusted proxies, x-forwarded-for is set by the edge and is reliable.
       // Check all IPs in the chain to find a match against PayFast's known ranges.

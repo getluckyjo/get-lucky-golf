@@ -68,18 +68,19 @@ Also confirm these are set (used by the ITN handler to write the bet):
 Env-var changes only take effect on a new deployment. Redeploy production after
 saving them.
 
-## Step 4 — Verify the live IP allow-list
+## Step 4 — Keep the ITN IP allow-list current
 
-The ITN handler enforces PayFast's published source IPs in production
-(`197.97.145.144/28` and `41.74.179.192/28`, see
-[notify route](../src/app/api/payments/payfast/notify/route.ts)). If PayFast ever
-changes these ranges, real ITNs will be rejected with `403`. If you see ITN
-rejections in the logs, re-check the current ranges in PayFast's docs and update
-`VALID_IPS`.
+The ITN handler hard-rejects (`403`) any notification whose source IP isn't in
+`VALID_IPS`, then authenticates the rest with the MD5 signature (your passphrase)
+and a server-side phone-home `validate` call. `VALID_IPS` now covers PayFast's
+**full current published ranges**: 197.97.145.144/28, 41.74.179.192/27,
+102.216.36.0/28, 102.216.36.128/28, and 144.126.193.139.
 
-On Vercel, `x-forwarded-for` is set by the edge and is reliable. If you host
-elsewhere behind a different proxy, confirm the client IP reaches the handler
-correctly, or the allow-list will reject genuine ITNs.
+⚠️ PayFast occasionally adds IP ranges. If bets stop being confirmed after a
+successful payment and you see `[PayFast ITN] Rejected — no valid IP` in the
+logs, re-check PayFast's current ranges and add them to `VALID_IPS`. (Other
+failure modes log `[PayFast ITN] Invalid signature` or `validate returned
+INVALID`.)
 
 ## Step 5 — Smoke test with real money
 
