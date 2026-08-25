@@ -1,0 +1,28 @@
+num	slug	route	source	states	purpose
+01	splash	/splash	src/app/(onboarding)/splash/page.tsx	default	Brand splash. Logo, tagline, pulsing dots. Auto-forwards after 2.5s.
+02	onboarding	/onboarding	src/app/(onboarding)/onboarding/page.tsx	default	Four-slide swipeable carousel over course photography. Sells the proposition.
+03	age-check	/age-check	src/app/(onboarding)/age-check/page.tsx	default,error,blocked	Hard 18+ gate. Date of birth + consent checkbox. Under-18 is blocked and signed out.
+04	auth	/auth	src/app/(onboarding)/auth/page.tsx	default,loading,error	Sign in. Single Continue-with-Google button, social proof, terms footer.
+05	payment-setup	/payment-setup	src/app/(onboarding)/payment-setup/page.tsx	default,selected	Choose preferred payment method from four radio cards.
+06	select-course	/select-course	src/app/(play)/select-course/page.tsx	default,empty,loading	Search and filter courses. First step of the play loop.
+07	select-course-hole	/select-course	src/app/(play)/select-course/page.tsx	modal	Challenge-hole panel revealed after picking a course. Hole picker plus stat grid.
+08	choose-stake	/choose-stake	src/app/(play)/choose-stake/page.tsx	default,selected,loading,error	The money screen. Six stake tiers, stake to potential win.
+09	choose-stake-confirm	/choose-stake	src/app/(play)/choose-stake/page.tsx	modal	Bottom-sheet confirmation before handing off to PayFast.
+10	payment-return	/payment-return	src/app/(play)/payment-return/page.tsx	loading,success,error	Interstitial after returning from PayFast while the bet is created.
+11	record	/record	src/app/(play)/record/page.tsx	default,permission	Full-screen camera viewfinder. Films the tee shot.
+12	confirm	/confirm	src/app/(play)/confirm/page.tsx	default	Video replay. Asks the single question: did it go in?
+13	result-claim	/result/claim	src/app/(play)/result/claim/page.tsx	default,loading,success	Win path. Celebration plus the three-document claim checklist.
+14	result-miss	/result/miss	src/app/(play)/result/miss/page.tsx	default	Miss path. Encouragement, stats, play again.
+15	verify	/verify	src/app/(play)/verify/page.tsx	default	Claim-under-review tracker. Four-stage timeline plus pending prize panel.
+16	home	/home	src/app/(dashboard)/home/page.tsx	default,empty,loading	Primary dashboard. Hero card, membership upsell, how-it-works, recent attempts.
+17	leaderboard	/leaderboard	src/app/(dashboard)/leaderboard/page.tsx	default,empty	Winners. Two tabs, three-up podium, ranked rows.
+18	history	/history	src/app/(dashboard)/history/page.tsx	default,empty,loading	My bets ledger. Summary stats, filter chips, paginated bet cards.
+19	account	/account	src/app/(dashboard)/account/page.tsx	default	Profile, stats, membership status, legal links, sign out.
+20	membership	/membership	src/app/(membership)/membership/page.tsx	default,member,loading	Get Lucky Golf Club. Price cards for non-members, status card for members.
+21	tab-bar	component	src/components/layout/BottomTabBar.tsx	default	The five-item bottom nav plus the sponsor banner above it. All five active states.
+22	legal	/terms	src/app/terms/page.tsx	default	One shared template covering Terms, Privacy and Responsible Play.
+23	not-found	404	src/app/not-found.tsx	default	Out of Bounds. Rendered inside the phone frame.
+24	error	error boundary	src/app/error.tsx	default	Something Went Wrong. Full-bleed, outside the phone frame.
+25	loading	loading state	src/app/loading.tsx	default	The spinner and skeleton language used across the app.
+26	toast	component	src/app/globals.css	modal	Transient message. Three variants: default, error, gold.
+27	desktop-backdrop	>768px	src/components/layout/PhoneFrame.tsx	default	What a desktop visitor sees around the phone column. One comp at 1440x900.
