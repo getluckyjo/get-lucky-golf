@@ -1,38 +1,48 @@
 # Asset specification
 
-Three groups: logo, icons, imagery. The logo and icon sets are the two highest-value
-things in this whole engagement, because both are genuinely broken today rather than
-merely dated.
+Three groups: logo, icons, imagery.
+
+The brand mark itself is good — see below — so the logo work is about producing usable
+formats and, critically, an icon-only mark that does not exist yet. The icon set is a
+straight replacement of thirteen emoji currently doing interface work.
 
 ---
 
-## 1. Logo — currently a machine trace in the wrong colour
+## 1. Logo — a good mark with the wrong file formats
 
-What ships today, honestly:
+**The real logo lives in the `getlucky-www` repository, and it is genuinely good.** Copies
+are in `logo/current/` so you have them to hand:
 
-- `public/logo.svg` is a **single auto-vectorised path** filled `#007728` — a bright
-  emerald that contradicts the brand's forest green. It cannot be recoloured sensibly
-  because it is one path, and it was traced from a raster, not drawn.
-- `public/logo.png` is **292 KB** and is what actually appears on the splash and auth screens.
-- `favicon.png` and `apple-icon.png` are **296 KB each** — for a favicon.
-- There is no reversed lockup. On dark backgrounds the code fakes one with a CSS filter
-  (`brightness(0) invert(1)`), which flattens the mark to pure white and destroys any detail.
+| File | What it is |
+|---|---|
+| `logo-color.png` | The primary lockup. Hand-lettered cream script reading "Get Lucky", with a forest-green drop shadow, over "GOLF" in a condensed sans beneath a rule. For light backgrounds. |
+| `logo-dark-bg.png` | The same lettering with a cream halo around the whole mark so it holds on dark green. A real reversed artwork, not a filter. |
+| `challenge-lockup.png` | The separate Get Lucky Challenge lockup. |
+| `partners/` | Indwe, Santam, Nedbank, Sun International, Shanky's Whip, FlySafair, Blue Label Telecoms. Several are already SVG. |
+
+**Ignore `public/logo.svg` in the app repository entirely.** It is an unrelated
+machine-traced path filled emerald `#007728` and it should be deleted, not redrawn.
+
+### What is actually missing
+
+The mark is fine. The delivery is not.
+
+1. **No vector master.** Every file is a PNG at roughly 2932 x 2195 and 269–305 KB. There is no `.ai`, `.svg` or `.eps` anywhere in either repository. Everything downstream is a resample of a raster.
+2. **No icon-only mark, and this is the real problem.** The lockup is hand-lettered script. It is beautiful at 200px and unreadable at 24px. A mobile app needs a mark that survives in a tab bar, a favicon, an app icon and an avatar — and one does not exist. **This is the single most valuable thing you can draw for us.**
+3. **No small-size treatment.** Nobody has decided what happens between "full lockup" and "icon".
 
 ### Deliver
 
 | File | Spec |
 |---|---|
-| `logo-primary.svg` | Full-colour horizontal lockup. Real vector. Under 15 KB. |
-| `logo-reversed.svg` | Cream on dark, drawn as artwork — not the primary with a filter over it. |
-| `logo-mono-dark.svg` | Single colour, for print and low-ink contexts. |
-| `logo-mono-cream.svg` | Single colour, reversed. |
-| `mark.svg` | Icon only, square, must still read at 24px. |
+| `logo-primary.svg` | The existing lockup, redrawn as true vector. Under 30 KB. |
+| `logo-reversed.svg` | The dark-background variant, as vector. |
+| `logo-mono-dark.svg` / `logo-mono-cream.svg` | Single colour, for print and low-ink contexts. |
+| `mark.svg` | **New.** Icon only, square, legible at 24px. |
 | `app-icon-1024.png` | Flattened, no transparency, under 60 KB. |
-| `app-icon-512.png`, `favicon-192.png`, `favicon-32.png` | Same, scaled and hand-checked at each size. |
-| `logo-source.ai` | The editable master, so this never has to be re-traced again. |
-| Clear space and minimum size | One diagram. What is the smallest the lockup may appear, and how much air does it need. |
-
----
+| `app-icon-512.png`, `favicon-192.png`, `favicon-32.png` | Scaled and hand-checked at each size — a script reduction will not survive automatically. |
+| `logo-source.ai` | The editable master. |
+| Clear space, minimum size, and the size at which the lockup gives way to the mark | One diagram. |
 
 ## 2. Icons — thirteen emoji are currently doing real UI work
 
@@ -98,7 +108,9 @@ a South African mobile connection that is a real cost to a real user.
 
 ```
 design/03-assets/
-  logo/       all logo files plus the clear-space diagram
-  icons/      the 19 SVGs, named exactly as listed above
-  imagery/    the hero comp and the treatment recipe
+  logo/current/     the existing marks from getlucky-www — reference, do not overwrite
+  logo/             your new files plus the clear-space diagram
+  icons/            the 19 SVGs, named exactly as listed above
+  imagery/          the hero comp and the treatment recipe
+  fonts/            PosterGothicRoundATF-Heavy.woff2 — the licensed display cut
 ```

@@ -61,27 +61,47 @@ Screenshots of every reachable screen are in `design/00-reference/current-app/`.
 those before reading further. The summary below is what a technical audit of the front end
 found, and it is the reason this engagement exists.
 
-### 2.1 There is a brand, and the app is roughly aligned to it
+### 2.1 The base is the Get Lucky website, not this app
 
-`docs/brand-guide.md` documents a palette taken from the live site: deep forest greens
-(`#1e3120`, `#335231`, `#4a7a3d`), gold (`#c9a94e`), cream (`#f5f0e1`), with Poster Gothic
-for display and Inter for body. The app's design tokens now match those values. The mood is
-"accessible luxury": prize numbers set large, gold on green, high-quality course
-photography, paired with insurance-backed trust signals.
+**`getluckyjo/getlucky-www` is the design base for V2.** Its `src/app/globals.css` is the
+cleanest expression of the brand we have: eleven colour tokens and two font families, with
+the Tailwind theme deriving from a single `:root` block instead of duplicating it. Fifty-nine
+lines, and it is right.
 
-That much is sound and is the starting point, not something to discard.
+```
+--background #f5f0e1   --green      #335231   --gold        #c9a94e
+--foreground #1a1a1a   --green-light #4a7a3d  --gold-light  #e8d48b
+--cream      #f5f0e1   --green-dark  #1e3120  --charcoal    #2a2a2a
+--cream-dark #e8e0cc                          --charcoal-light #3a3a3a
+```
+
+Display is Poster Gothic Round ATF at weight 800, self-hosted; body is Inter at 300–700.
+Focus rings are 2px gold at 2px offset. A copy of the file is in
+`design/01-tokens/getlucky-www-globals.css`, and the token sheet is built from it.
+
+The mood is "accessible luxury": prize numbers set large, gold on green, course photography,
+paired with insurance-backed trust signals.
+
+**The palette is open.** This is Get Lucky V2, not a tidy-up — you are free to repoint any
+colour. The website values are the starting point, not a constraint. What the app should
+inherit regardless is the *architecture*: one source of truth, tokens that are actually used.
 
 ### 2.2 But the design system is not actually enforced
 
-The app declares a clean set of design tokens and then largely ignores them. **55 distinct
+The app has drifted from the website and then drifted from itself. It declares a clean set
+of design tokens and largely ignores them. **55 distinct
 hardcoded colour values appear across 45 files — roughly 350 occurrences.** The brand green
 is written out as a literal 49 times rather than referenced as a token. A legacy red
 (`#c0392b`) appears 23 times and contradicts the official red. There are off-palette greens
 and golds that exist for no reason anyone can now recall.
 
+It has also drifted from the website's naming: the app calls the brand green `--green-deep`
+where the website calls it `--green`, and it references `--font-heading`, a variable the
+website defines and the app never did — so it currently resolves to nothing.
+
 The practical consequence: **changing a colour today changes almost nothing.** This is being
 fixed on the engineering side while you design — see section 8 — so that your palette lands
-in one place rather than 45.
+in one place rather than 45, under the website's naming.
 
 ### 2.3 Thirteen emoji are doing the work of an icon set
 
@@ -90,12 +110,20 @@ search field is 🔍 injected through CSS. There are eleven more. These render a
 picture on iPhone, Android, Windows and Mac, cannot be recoloured or aligned precisely, and
 read as unfinished to anyone who notices.
 
-### 2.4 The logo is a machine trace in the wrong colour
+### 2.4 The app is not using the real logo
 
-`logo.svg` is a single auto-vectorised path filled `#007728` — a bright emerald that
-contradicts the brand's forest green. The version that actually ships is a 292 KB PNG. The
-favicon is a 296 KB PNG. There is no reversed lockup, so on dark backgrounds the app fakes
-one with a CSS filter that flattens the mark to pure white.
+The actual Get Lucky mark — hand-lettered cream script with a forest-green shadow, over
+"GOLF" in a condensed sans — lives in the website repository, along with a properly drawn
+reversed variant for dark backgrounds and a separate challenge lockup. It is good work.
+
+The app is not using it. `public/logo.svg` in the app is an unrelated machine-traced path
+filled emerald `#007728`, and what actually ships is a 292 KB PNG. That file should be
+deleted rather than redrawn.
+
+Two real gaps remain even with the website's assets:
+
+- **No vector master anywhere.** Every logo file in either repository is a PNG at roughly 2932 x 2195. There is no `.ai`, `.svg` or `.eps`.
+- **No icon-only mark.** The lockup is script lettering — excellent at 200px, unreadable at 24px. A mobile app needs a mark for the tab bar, the favicon, the app icon and the avatar. One does not exist, and drawing it is the highest-value single thing in this engagement.
 
 ### 2.5 There are real accessibility failures
 
@@ -240,8 +268,12 @@ CSV rather than a design tool export, so they open in Numbers or Excel and you c
 as tables. Give sizes in pixels at 375 width; the responsive scale is derived from that, so
 you never write a breakpoint or a `clamp()`.
 
-`design/01-tokens/README.md` explains both, and carries the contrast table you should read
-before committing to gold anywhere.
+Each row is marked with its `source`: `getlucky-www` for values taken from the website,
+`app-only` for things the app needs and the website has no equivalent for — error states,
+the bottom tab bar, motion, the fluid spacing scale.
+
+`design/01-tokens/README.md` explains both sheets, and carries the contrast table you should
+read before committing to gold anywhere.
 
 **One thing worth your attention while you are in there:** the bottom tab bar currently
 takes **120pt of an 812pt screen — nearly 15% of the viewport** — because the sponsor
@@ -373,36 +405,40 @@ being drawn. A single drop at the end wastes half the calendar.
 One thing, and it is worth knowing about because it directly affects how cheaply your work
 can be applied.
 
-The engineering side is running a **token consolidation pass**: replacing all 350 hardcoded
-colour values with references to the design tokens, collapsing the two duplicate token
-declarations into one, and removing five dead token references that currently resolve to
-nothing. It also puts an icon component in place with today's emoji inside it, so your SVGs
-become a straight swap rather than a refactor.
+The engineering side is running a **token consolidation pass**, bringing the app onto the
+website's token architecture: adopting `getlucky-www`'s naming (`--green`, `--green-light`,
+`--charcoal`), collapsing the app's two duplicate token declarations into one `:root` block
+that the Tailwind theme derives from, replacing all 350 hardcoded colour values with token
+references, and removing the dead references that currently resolve to nothing — including
+`--font-heading`, which the website defines and the app only ever pointed at.
+
+It also puts an icon component in place with today's emoji inside it, so your SVGs become a
+straight swap rather than a refactor, and moves the display font to the `.woff2` the website
+already uses — 28 KB against the 97 KB `.otf` the app ships.
 
 **The app looks pixel-identical when this is finished** — that is the acceptance test for
 it. What changes is that afterwards, applying your palette is a twenty-line edit in one
 file instead of a hunt across 45 files where every missed value ships as a visible bug.
 
 It runs while you draw, so it costs no calendar time. It also means the token sheet you are
-filling in will actually govern the app, which today it would not.
+filling in will actually govern the app, which today it would not — and that the app and the
+website will finally be speaking the same language.
 
 ---
 
-## 9. One open question for the creative director
+## 9. The palette is open
 
-`docs/brand-guide.md` names the live website as the source of truth for the palette and
-states that where the site and the app disagree, the site wins.
+An earlier draft of this brief left this undecided. It is decided: **you may repoint the
+colours.** This is Get Lucky V2.
 
-**We need to decide together whether that still holds.**
+The forest/gold/cream palette in `design/01-tokens/tokens.csv` is taken from the live
+website and is the starting point — a considered, coherent scheme that works. But nothing
+in it is locked, and if V2 wants a different direction, propose it in the token sheet.
 
-- If the forest/gold/cream palette is **locked**, the colour rows in the token sheet are reference material, and this engagement is layout, hierarchy, iconography, the logo and typography. A tighter and cheaper brief.
-- If the palette is **open**, the token sheet's colour rows are genuinely yours, and the marketing site will eventually need to follow the app rather than lead it.
+Two consequences worth stating plainly:
 
-Either is a legitimate answer and the pack works both ways. But it changes what the pilot
-is really testing, so it should be settled before you start rather than discovered at
-review. Raise it in the kick-off.
-
----
+- **The website will eventually follow the app, not the other way round.** `docs/brand-guide.md` in the app repository still says the live site wins where the two disagree. That rule is now retired. Whatever V2 lands on becomes the brand, and `getluckyjo/getlucky-www` gets brought in line afterwards.
+- **Repointing colour is cheap; repointing structure is not.** The token architecture, the naming, and the discipline of using tokens instead of literals should survive whatever you do to the values. That is what section 8 is putting in place.
 
 ## 10. Logistics and next steps
 
@@ -410,6 +446,10 @@ review. Raise it in the kick-off.
 into it. If you would rather work in a shared drive, mirror this exact folder structure and
 we will bring it into the repository — but the structure and the naming need to survive the
 trip, because they are what makes the handback buildable.
+
+**The website.** `getluckyjo/getlucky-www` is the V2 base — its stylesheet, its logo files
+and the licensed display font are all copied into the design pack, and the live site is at
+www.getluckygolf.co.za. Look at it before you look at the app.
 
 **Access.** You will be given a beta login. Use it — several screens read very differently
 with a real account than they do in the screenshots, and the five screens after the payment
@@ -420,7 +460,7 @@ amended rather than guessed at.
 
 ### Next steps
 
-1. Kick-off call. Settle the palette question in section 9.
+1. Kick-off call.
 2. Read `design/README.md`, then `design/02-screens/_EXAMPLE.md`.
 3. Look through `design/00-reference/current-app/`.
 4. Deliver the pilot: two screens, the logo set, the icon set, both token sheets.

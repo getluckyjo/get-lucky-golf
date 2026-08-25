@@ -1,8 +1,14 @@
 # Get Lucky Golf — Brand Guide
 
-> Source of truth: the live production site **getluckygolf.co.za**. All tokens below
-> were extracted from the live site's compiled CSS custom properties on 2026-05-31.
-> When the live site and the app disagree, the live site wins.
+> **Status as of 2026-08-25: superseded for V2.**
+>
+> Tokens below were extracted from the live site on 2026-05-31, and the canonical source
+> is `getluckyjo/getlucky-www` — `src/app/globals.css`, eleven colour tokens and two font
+> families. That file is the base for the app's V2 reskin.
+>
+> The old rule that "when the live site and the app disagree, the live site wins" is
+> **retired**. The palette is open for V2: see `docs/Design-Reskin-Brief.md` section 9.
+> Whatever V2 lands on becomes the brand, and the website follows afterwards.
 
 ---
 
@@ -38,9 +44,18 @@
 ### The single most important brand fact
 
 The brand green is a **deep forest/olive green** (`#1e3120` → `#335231` → `#4a7a3d`),
-**not** a bright emerald. The app's CSS tokens now carry the correct forest scale. The
-emerald `#007728` survives in one place only — `public/logo.svg` — which is why the logo
-is being redrawn. See section 6.
+**not** a bright emerald. The app's CSS tokens carry the correct forest scale. The emerald
+`#007728` survives in one place only — the app's `public/logo.svg`, which is an unrelated
+machine trace and should be deleted rather than corrected. The real mark is in the website
+repository. See section 6.
+
+### Naming: the website is canonical
+
+The website calls them `--green` / `--green-light` / `--green-dark` and `--charcoal` /
+`--charcoal-light`. The app calls the same colours `--green-deep` / `--green-mid` and
+`--gray-dark` / `--gray-mid` / `--gray-light`. **The website's naming wins**; the app is
+being brought onto it. The app also references `--font-heading`, which only the website
+defines — in the app it currently resolves to nothing.
 
 ---
 
@@ -61,13 +76,15 @@ generous line-height (~1.5–1.6).
 
 - Primary mark: **Get Lucky Golf Club** — circular badge / colour lockup.
 - Challenge wordmark: **Get Lucky** challenge lockup (`GLG_Challenge Lockup`).
-- ⚠️ **The current logo assets are not fit for use.** `logo.svg` is a machine-traced
-  single path filled emerald `#007728`; the app actually ships a 292 KB `logo.png`, and
-  there is no reversed lockup — dark backgrounds fake one with a CSS filter. A full logo
-  set is commissioned in `docs/Design-Reskin-Brief.md`. Sections below describe the
-  intended treatment, not what exists today.
-- Intended: display the forest-green lockup directly on cream backgrounds; use a properly
-  drawn cream/white lockup on dark or green backgrounds.
+- **The real mark lives in `getluckyjo/getlucky-www`** at `public/logos/`: hand-lettered
+  cream script reading "Get Lucky" with a forest-green shadow, over "GOLF" in a condensed
+  sans. `logo-color.png` for light backgrounds, `logo-dark-bg.png` — a properly drawn
+  reversed artwork with a cream halo — for dark, plus a separate `challenge-lockup.png`.
+- ⚠️ **The app is not using any of them.** Its `public/logo.svg` is an unrelated
+  machine-traced path filled emerald `#007728`; what ships is a 292 KB PNG. Delete it.
+- ⚠️ **No vector master exists in either repository**, and **there is no icon-only mark** —
+  the script lockup cannot survive at 24px in a tab bar or 32px as a favicon. Both are
+  commissioned in `docs/Design-Reskin-Brief.md`.
 - Placement: top-left of nav and repeated in footer.
 - Clear space and minimum sizes: keep generous padding; never place the coloured
   logo on a busy photo without a solid scrim.

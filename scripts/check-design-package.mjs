@@ -122,7 +122,7 @@ function checkCsv(file, label, expectHeader) {
 }
 
 const tokenLines = checkCsv(TOKENS, 'design/01-tokens/tokens.csv',
-  'group,token,current_value,new_value,used_for,notes')
+  'group,token,current_value,new_value,source,used_for,notes')
 if (tokenLines) {
   let edits = 0
   for (const [i, line] of tokenLines.slice(1).entries()) {

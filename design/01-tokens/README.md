@@ -2,6 +2,30 @@
 
 Two spreadsheets. Open them in Excel, Numbers or Google Sheets. Save back as CSV.
 
+## Where these values come from
+
+**The Get Lucky website (`getluckyjo/getlucky-www`) is the base.** Its
+`src/app/globals.css` is the cleanest expression of the brand we have — eleven colour
+tokens and two font families, with the Tailwind theme deriving from a single `:root`
+block rather than duplicating it. That is both the palette and the architecture the app
+is being brought in line with.
+
+Every row is marked in the `source` column:
+
+| `source` | Means |
+|---|---|
+| `getlucky-www` | Comes from the website. This is the V2 base. |
+| `app-only` | The app needs it and the website has no equivalent — error states, the bottom tab bar, motion, the fluid spacing scale. |
+| `derived` | A proposal to fold an untokenised app value into a website token. |
+
+**The palette is open.** You are free to repoint any colour — this is Get Lucky V2, not a
+tidy-up. The website values are the starting point, not a constraint.
+
+One thing the website does not have and the app does: **a fluid spacing, radius and type
+scale**. Everything in the app scales continuously between a 320px phone and a tablet
+rather than jumping at breakpoints. It works well and we are keeping it, which is why
+those rows are `app-only` and are given as pixels at 375 width.
+
 ## The one rule
 
 **Blank means unchanged.** Every row already contains what the app uses today. Only
@@ -34,11 +58,16 @@ Nine roles covering every piece of text in the app.
 
 ### Two constraints on typography
 
-**Poster Gothic Round ATF is licensed and bundled as a single Heavy cut.** There is no
-Light, Regular or Medium. If the design needs another weight, say so now — it is a
-licensing purchase, and finding out during the build is expensive.
+**Poster Gothic Round ATF is licensed as a single Heavy cut**, declared at weight 800 on
+the website. There is no Light, Regular or Medium. If the design needs another weight, say
+so now — it is a licensing purchase, and finding out during the build is expensive.
 
-Inter and Space Mono are loaded from Google Fonts and any weight is free to use.
+**Inter** is used at 300, 400, 500, 600 and 700 on the website, self-hosted through
+`next/font`. Any weight is free to add.
+
+**Space Mono** is an app-only addition for numerals — timers, multipliers, card numbers.
+The website does not use it. If you would rather set numerals in Inter, say so and it
+goes away.
 
 ## Before you commit to gold
 
