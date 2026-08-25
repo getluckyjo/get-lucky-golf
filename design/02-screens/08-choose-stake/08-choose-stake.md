@@ -5,7 +5,7 @@
 > States required: default, selected, loading, error
 
 Comp: 08-choose-stake__default.png   (375 x HEIGHT)
-Change type:           (RESKIN-ONLY | RESTRUCTURED | REBUILT)
+Change type:           (REDESIGNED | RECOMPOSED | NEW | ABSORBED | CARRIED-OVER)
 Scrolls: 
 Fixed on screen: 
 

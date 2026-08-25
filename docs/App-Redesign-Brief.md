@@ -1,14 +1,16 @@
 # GET LUCKY GOLF
 ## Insurance-backed hole-in-one gaming
-### Creative Direction & Front-End Reskin Brief
+### Creative Direction & App Redesign Brief
 
-Scope of work for a creative director / lead designer to take the product from a working
-but undesigned beta build to a designed public beta.
+A full redesign of the Get Lucky Golf player app for public beta. The app that exists today
+is a reference for **what the product does** — not for how it should look, and not for how
+it should be put together.
 
 **Prepared by:** Johannes Le Roux, Founder
 **Contact:** johannes@getluckygolfclub.com
 **Date:** 25 August 2026
 **Status:** Working beta — the app functions end to end; the visual layer has never been designed
+**Engagement:** Full redesign. Get Lucky V2.
 
 ---
 
@@ -35,9 +37,16 @@ design, and it now needs a creative director.
 
 ### 1.1 What we are asking for
 
-A reskin of the player-facing app, with permission to restructure the layout of any screen.
-27 surfaces. Flat comps plus two short spreadsheets and a one-page note per screen. A
-proper logo set. An icon set to replace the emoji currently doing that job.
+**A full redesign of the player-facing app.** A visual language, not a coat of paint: layout,
+structure, hierarchy, components, iconography, motion, and how the brand expresses itself in
+a product rather than on a poster.
+
+27 surfaces, which are a **functional checklist** rather than a set of layouts to preserve —
+you may propose merging, splitting or adding screens. Flat comps plus two short spreadsheets
+and a one-page note per screen. A logo set including an icon-only mark that does not exist
+today. An icon set to replace the emoji currently doing that job.
+
+The brand is open too. See section 9.
 
 ### 1.2 Tech context (for orientation only — no code required from you)
 
@@ -58,8 +67,12 @@ straight to the engineering side and implemented from.
 ## 2. What exists today — an honest assessment
 
 Screenshots of every reachable screen are in `design/00-reference/current-app/`. Look at
-those before reading further. The summary below is what a technical audit of the front end
-found, and it is the reason this engagement exists.
+those before reading further — **as a specification of what the product does, not as a
+design.** They show you every function that has to survive. They are not a layout to
+improve on, and you should feel no obligation to any composition in them.
+
+The rest of this section is what a technical audit of the front end found. It is the reason
+this engagement exists, and it is diagnosis rather than inheritance.
 
 ### 2.1 The base is the Get Lucky website, not this app
 
@@ -145,53 +158,73 @@ Every screen renders inside a literal simulated iPhone — black chassis, notch,
 floating on a near-black page. There is no desktop layout behind it. This is the single
 loudest "this is a prototype" signal in the product.
 
-### 2.7 What is genuinely good and should survive
+### 2.7 What the build can already do
 
-- **The fluid scale.** Type, spacing and radius all scale continuously from a 320px phone up to a tablet with no breakpoint jumps. It works well and we are keeping it.
-- **The motion language.** A consistent expo-out curve with staggered entrances. Restrained and confident.
-- **Poster Gothic set large in gold on green.** When the app shows a prize number, it looks like the product it wants to be. That moment is the brand; it just does not extend to the other 90% of the interface.
+None of this is binding. It is what the engineering side already supports, so you know what
+is cheap rather than what is expected.
+
+- **Continuous fluid scaling.** Type, spacing and radius scale smoothly from a 320px phone to a tablet with no breakpoint jumps. If you want that, it already works. If your design wants fixed steps instead, say so.
+- **A motion system.** A consistent expo-out curve with staggered entrances is in place. Restrained, and easy to extend or replace.
+- **Large display type in gold on green.** When the app shows a prize number it briefly looks like the product it wants to be. That is the one moment worth studying — not to copy, but because it is evidence of what the brand can do when it is given room.
 
 ---
 
 ## 3. Scope
 
-### 3.1 In scope
+### 3.1 In scope — a full redesign
 
-- **The player app: 27 surfaces**, listed in section 5 and in `design/00-reference/screen-inventory.md`.
-- **Reskin and layout redesign.** Colour, type, spacing, components, imagery, iconography, motion — and the arrangement and hierarchy of any screen.
-- **A logo set and an icon set.**
+- **The player app: 27 surfaces**, listed in section 5 and in `design/00-reference/screen-inventory.md`. They are a **functional checklist**, not a set of layouts.
+- **The whole visual language.** Colour, type, spacing, components, iconography, imagery, motion, and the structure and hierarchy of every screen.
+- **How the screens are composed.** You may propose merging two screens into one, splitting one into two, or adding a step. See 3.4.
+- **The brand's digital expression**, including the wordmark itself. See section 9.
+- **A logo set** — vector masters, and the icon-only mark that does not exist today.
+- **An icon set** to replace the thirteen emoji currently doing interface work.
 - **A photographic treatment recipe** for course imagery.
 - **One desktop backdrop comp.**
 
 ### 3.2 Out of scope
 
 - **The admin back-office** — nine screens used by staff for claims adjudication. Deliberately left as-is for beta.
-- **Routes and flow order.** How a screen looks is yours. Which screens exist, and in what order, is fixed. See 3.3.
 - **The PayFast checkout page.** Payment happens off-site on PayFast's own hosted page. We cannot design it.
-- **The marketing website** at getluckygolf.co.za.
+- **The marketing website** at getluckygolf.co.za. It will follow the app, not lead it — see section 9.
 - **New photography.** Use the 19 course photographs already in the repo.
 - **A responsive desktop application layout.** One backdrop comp only.
 - **Code.** You design; the engineering side builds.
 
-### 3.3 Non-negotiables
+### 3.3 The functional contract
 
-These protect money, law and contracts. They are not design opinions and they are not
-negotiable — but everything about *how* they look is yours.
+This is what has to remain true. Every item states a **capability that must exist and stay
+reachable** — none of them says where it sits, what it looks like, or how many screens it
+takes. That part is yours.
 
-| # | Constraint | Why |
+| # | Must remain true | Why |
 |---|---|---|
-| 1 | The 18+ age gate stays a hard blocking step, with date-of-birth entry and an explicit consent checkbox. It cannot become a dismissible banner. | Legal requirement for real-money play. |
-| 2 | The Indwe sponsor banner stays visible above the tab bar on every screen. | Contractual. Its height is not fixed — see 4.6. |
-| 3 | Terms, Privacy and Responsible Play stay reachable, and the National Responsible Gambling link stays on the under-18 block screen. | Regulatory posture. |
-| 4 | The six stake tiers keep their exact amounts. No rounding, no invented tiers. | Server-validated; they are the product's pricing. |
-| 5 | Routes and flow order are unchanged. | Payment and verification logic depends on them. |
-| 6 | Minimum tap target 44 x 44pt. | Usability floor. |
-| 7 | Text contrast at least 4.5:1, or 3:1 above 24px. | See 2.5. |
+| 1 | A user cannot reach real-money play without passing a hard 18+ gate that captures date of birth and an explicit consent. It cannot become a dismissible banner. | Legal requirement. |
+| 2 | The Indwe sponsor presence is visible throughout the app. | Contractual. Its size, placement and treatment are open — see 4.6. |
+| 3 | Terms, Privacy and Responsible Play stay reachable, and the National Responsible Gambling link stays on the under-18 refusal. | Regulatory posture. |
+| 4 | The six stake tiers keep their exact amounts. No rounding, no invented tiers. | Server-validated; they are the pricing. |
+| 5 | Every function in section 5 survives and stays reachable. | It is the product. |
+| 6 | Payment hands off to PayFast and comes back. | The handoff is fixed; the screens either side are yours. |
+| 7 | Minimum tap target 44 x 44pt. | Usability floor. |
+| 8 | Text contrast at least 4.5:1, or 3:1 above 24px. | See 2.5. |
 
 The six tiers, for reference: R50 → R25,000 · R100 → R60,000 · R150 → R100,000 ·
 R250 → R200,000 · R500 → R500,000 · R1,000 → R1,000,000.
 
----
+### 3.4 Restructuring the flow — propose it, don't assume it
+
+The 27 screens exist because today's app has 27 screens, not because that is the right
+number. If the play loop should be four steps instead of six, or the two onboarding screens
+should be one, say so.
+
+**But propose it before you draw it.** Write it up in
+`design/00-reference/flow-proposal.md` — what merges into what, what is new, what goes
+away, and why. It is a **Stage 0 deliverable**, alongside the concept directions.
+
+The reason is cost, not caution. Changing what a screen looks like is a day of engineering.
+Changing how many steps sit between "choose a stake" and "money has moved" touches payment
+state, verification and the bet record, and it needs to be estimated rather than discovered.
+A proposal gets a yes, a no, or a counter — quickly. A surprise in wave three does not.
 
 ## 4. How the handback works
 
@@ -237,9 +270,12 @@ we build.** Anything suffixed is commentary. Exploration you want seen but not b
 
 ### 4.4 The redline twin
 
-If you restructure a screen, export a second copy of the comp with **numbered magenta
-circles** on it, saved as `16-home__default--redline.png`. The numbers key to the notes in
-your screen card.
+Export a second copy of each default comp with **numbered magenta circles** on it, saved as
+`16-home__default--redline.png`. The numbers key to the notes in your screen card.
+
+In a reskin this would be optional. In a redesign it is the main thing: almost nothing maps
+onto the old screen, so the numbered notes are how you explain the new structure at all.
+Required on everything except `ABSORBED` and `CARRIED-OVER`.
 
 That is all the annotation we need. No measurements, no specs, no callout syntax to learn —
 a layer of numbered circles, so the image and the words can point at each other.
@@ -253,10 +289,20 @@ filling in your first.**
 Four of its sections carry real weight, and each exists because a flat image cannot carry
 that information:
 
-- **Change type** — `RESKIN-ONLY`, `RESTRUCTURED` or `REBUILT`. One word that tells the engineering side whether this is a colour change or a rebuild.
+- **Change type** — one word that tells the engineering side what kind of job this screen is. The five values are in the table below.
 - **Added / Removed / Kept** — because **removal is invisible in an image.** If you delete a paragraph, the comp simply does not show it, and that is indistinguishable from you forgetting it.
 - **Final copy** — because your comp will contain realistic placeholder text. Anything not listed here is treated as placeholder and left wired to live data. Without this we would commit "Leopard Creek Country Club" as literal text and break the database binding behind it.
 - **Fixed vs scrolls, and which blocks repeat** — neither is visible in a still image, and getting either wrong puts content behind the tab bar or replaces a live list with six hardcoded rows.
+
+The change-type values:
+
+| Value | Means |
+|---|---|
+| `REDESIGNED` | New design, same functional scope, still one screen. **The usual answer.** |
+| `RECOMPOSED` | Absorbs, splits or reorganises other screens. Add a `Replaces:` line naming their numbers, and reference the flow proposal. |
+| `NEW` | A screen that does not exist today. Put it in a folder named `new-<slug>`. |
+| `ABSORBED` | This screen goes away and its function moves elsewhere. Add an `Absorbed into:` line, and deliver no comps for it. |
+| `CARRIED-OVER` | You are deliberately keeping today's structure. Rare — say why. |
 
 ### 4.6 The two spreadsheets
 
@@ -295,7 +341,11 @@ accident. Move a file out of the inbox when it is ready to be looked at.
 
 ## 5. Screen inventory
 
-27 surfaces. The full table, with the source file and current purpose of each, is in
+**This is a functional checklist, not a layout.** Each row is a job the product has to do
+and a set of states it has to handle. Whether that job needs its own screen, shares one, or
+splits into two is a design decision — see 3.4, and put it in the flow proposal.
+
+The full table, with the source file and current purpose of each, is in
 `design/00-reference/screen-inventory.md`. Summary by group:
 
 | Group | Screens | Count |
@@ -306,23 +356,27 @@ accident. Move a file out of the inbox when it is ready to be looked at.
 | Chrome and system | Tab bar, legal template, 404, error, loading, toast | 6 |
 | Desktop | Desktop backdrop | 1 |
 
-**49 comps in total**, plus a redline twin for each restructured screen.
+**49 comps** against today's screen map, plus a redline twin for each. That number moves if
+your flow proposal changes the composition — which is fine, and is exactly why the proposal
+comes first.
 
-### 5.1 The five most important screens
+### 5.1 The five that matter most
 
-If attention has to be unevenly distributed, distribute it here:
+If attention has to be unevenly distributed, distribute it here. Each is named by what it
+does, not by the screen it currently occupies:
 
-1. **Choose stake** — the money screen. Six tiers, the prize number as hero. It is where the product either feels credible or does not.
-2. **Home** — the densest screen, and the one a returning player sees most.
-3. **Result: claim** — the ace. The single best moment the product can deliver, and currently a trophy emoji.
-4. **Result: miss** — the far more common outcome. Getting the tone right here is what makes someone play again.
-5. **Onboarding** — four slides to explain an unfamiliar and slightly improbable proposition to a first-time visitor.
+1. **Committing money.** Six tiers, the prize number as hero. Where the product either feels credible or does not.
+2. **Coming back.** What a returning player sees, and what it invites them to do next.
+3. **The ace.** The single best moment the product can deliver, currently rendered as a trophy emoji.
+4. **The miss.** Far more common, and where the tone decides whether anyone plays twice.
+5. **Understanding the offer.** Explaining an unfamiliar and slightly improbable proposition to someone who has never heard of it.
 
 ### 5.2 The state vocabulary
 
 `default`, `empty`, `loading`, `error`, `success`, `selected`, `modal`, `permission`,
-`blocked`. Which states each screen needs is already decided and listed in the inventory —
-you decide how they look, not which exist.
+`blocked`. The inventory lists which states each function has to handle. If your composition
+changes where a state lives, move it and note it — the requirement is that every state is
+designed somewhere, not that it stays where it is today.
 
 **Empty and error states matter more here than in most products.** A new user meets the
 empty state first, and an error on a screen where money has just moved is the moment trust
@@ -342,9 +396,10 @@ validates:
 3. Exactly one unsuffixed file per screen and state.
 4. Every comp is PNG, 750px wide, under 1.5 MB.
 5. Every screen folder has a filled-in card with all required sections and a valid change type.
-6. Every `RESTRUCTURED` or `REBUILT` screen has a redline twin.
-7. Both token sheets parse, with no renamed, reordered or deleted rows, and valid values.
-8. Every icon SVG is 24x24 with no embedded raster or gradients.
+6. Every screen has a redline twin, except `ABSORBED` and `CARRIED-OVER`.
+7. Every `RECOMPOSED` screen names what it `Replaces:`, and every `ABSORBED` screen names what it is `Absorbed into:`.
+8. Both token sheets parse, with no renamed, reordered or deleted rows, and valid values.
+9. Every icon SVG is 24x24 with no embedded raster or gradients.
 
 A checklist a person runs is a checklist a person skips. This one is a script, and it runs
 before anyone reviews anything — so a package either passes or comes back with a specific
@@ -359,7 +414,7 @@ Per screen, on the engineering side:
 - Every declared state built and reachable.
 - Zero hardcoded colours; everything through tokens.
 - Zero emoji in the player app; every glyph from the icon set.
-- Routes, flow order and navigation targets unchanged.
+- Every function from section 5 present and reachable; any composition change matches the agreed flow proposal.
 - No live data replaced by placeholder text from a comp.
 - Contrast at least 4.5:1; tap targets at least 44pt.
 - Reduced-motion preferences honoured.
@@ -367,78 +422,108 @@ Per screen, on the engineering side:
 
 ---
 
-## 7. Phasing — and the pilot
+## 7. Phasing — directions first, then depth, then breadth
 
-### 7.1 The pilot gate
+### 7.1 Stage 0 — concept directions
 
-**We are not asking for 27 screens before we have built any of them.**
+**Before anything is resolved, we want two or three whole-app visual directions.**
 
-Phase 1 is exactly two screens, plus everything global:
+Each direction is the *same two screens* — committing money, and coming back — drawn in a
+genuinely different visual language. Not three colourways of one idea: three answers to
+"what should this product feel like". Alongside them:
 
-- **`08-choose-stake`** — a decision screen with a hero number, a repeating data-driven list, a modal, and four states.
-- **`16-home`** — the densest screen in the app, mixing static and live content, with an empty state.
-- The **logo set**, the **icon set**, and both **token sheets** — because these touch every screen, and discovering the icon export spec is wrong on screen 20 is a disaster while discovering it on screen 2 is a Tuesday.
+- A short written rationale per direction. What it is going for, who it is aimed at, what it sacrifices.
+- **The flow proposal** (3.4), if you want to change how the screens are composed.
+- A first pass at the brand question in section 9 — what happens to the wordmark in each direction.
 
-We then build both screens end to end and sit down together to fix whatever this brief got
-wrong — which fields were unclear, what was missing, where the format broke down. The brief
-is amended. **Then** the remaining 25 are drawn.
+Johannes picks one, or asks for a hybrid. **Then** you go deep.
 
-The gate costs about a week. Skipping it risks replicating a single format problem 27 times.
+This stage exists because a full redesign that goes the wrong way is expensive to discover
+at screen twenty. Two or three loose directions cost a fraction of one resolved screen, and
+they are the cheapest decision-making tool available.
 
-### 7.2 Waves
+### 7.2 Stage 1 — the pilot
+
+The chosen direction, resolved properly, on the same two screens plus everything global:
+
+- **Committing money** (`08-choose-stake` today) — a decision screen with a hero number, a repeating data-driven list, a modal, and four states.
+- **Coming back** (`16-home` today) — the densest surface in the app, mixing static and live content, with an empty state.
+- The **logo set**, the **icon set** and both **token sheets** — because they touch every screen, and discovering the icon export spec is wrong on screen 20 is a disaster while discovering it on screen 2 is a Tuesday.
+
+We build both end to end, then sit down and fix whatever this brief got wrong — which fields
+were unclear, what was missing, where the format broke down. The brief is amended. **Then**
+the remaining screens are drawn.
+
+The two gates together cost two or three weeks. Skipping them risks a wrong direction, or a
+format problem, replicated across the whole app.
+
+### 7.3 Waves
 
 | Phase | You | Engineering | Gate |
 |---|---|---|---|
-| **0** | Read the pack | Design pack built, current-state captured, token refactor begun | Pack handed over |
-| **1** | Pilot: 2 screens + logo + icons + token sheets | Token refactor: colours consolidated, emoji-free icon component ready | Refactor leaves the app pixel-identical |
-| **2** | Format retro | Build the two pilot screens, apply the new palette | Both pilot screens accepted |
+| **0** | 2–3 directions on 2 screens, rationale, flow proposal, brand first pass | Token architecture, lint ratchet, icon shell, font swap | A direction is chosen |
+| **1** | Pilot: the chosen direction resolved, plus logo, icons, token sheets | Build the two pilot screens | Both accepted under section 6 |
+| **2** | Format retro | Brief amended, palette applied | Agreed changes to this document |
 | **3** | Wave A onboarding · Wave B play loop · Wave C main app · Wave D chrome and legal | Build wave by wave | Section 6 per wave |
-| **4** | Review fixes | Desktop backdrop, accessibility sweep, asset weight budget | Full acceptance across all 27 |
+| **4** | Review fixes | Desktop backdrop, accessibility sweep, asset weight budget | Full acceptance |
 
 Delivering in waves is what lets building start on onboarding while the play loop is still
 being drawn. A single drop at the end wastes half the calendar.
 
----
-
 ## 8. What is happening in the codebase while you design
 
-One thing, and it is worth knowing about because it directly affects how cheaply your work
-can be applied.
+One thing, and it is worth knowing because it affects how cheaply your work gets applied.
 
-The engineering side is running a **token consolidation pass**, bringing the app onto the
-website's token architecture: adopting `getlucky-www`'s naming (`--green`, `--green-light`,
-`--charcoal`), collapsing the app's two duplicate token declarations into one `:root` block
-that the Tailwind theme derives from, replacing all 350 hardcoded colour values with token
-references, and removing the dead references that currently resolve to nothing — including
-`--font-heading`, which the website defines and the app only ever pointed at.
+The engineering side is putting the app onto the website's token architecture: adopting
+`getlucky-www`'s naming (`--green`, `--green-light`, `--charcoal`), collapsing the app's two
+duplicate token declarations into one `:root` block the Tailwind theme derives from, removing
+dead references — including `--font-heading`, which the website defines and the app only ever
+pointed at — and moving the display font to the `.woff2` the website already uses, 28 KB
+against the 97 KB `.otf` the app ships. An icon component goes in with today's emoji inside
+it, so your SVGs become a data swap rather than a refactor.
 
-It also puts an icon component in place with today's emoji inside it, so your SVGs become a
-straight swap rather than a refactor, and moves the display font to the `.woff2` the website
-already uses — 28 KB against the 97 KB `.otf` the app ships.
+**One deliberate change of plan.** An earlier draft of this brief committed engineering to
+sweeping all ~350 hardcoded colour values out of the app before your comps arrived. That was
+right for a reskin. For a full redesign it is partly wasted work: a screen being rebuilt has
+its markup and styles rewritten anyway, so de-hardcoding it first is throwaway.
 
-**The app looks pixel-identical when this is finished** — that is the acceptance test for
-it. What changes is that afterwards, applying your palette is a twenty-line edit in one
-file instead of a hunt across 45 files where every missed value ships as a visible bug.
+So the sweep is no longer front-loaded. Instead a lint rule fails the build on any new
+hardcoded colour, and each screen gets cleaned as it is rebuilt. The token layer is correct
+from day one; the old literals die as their screens do. Same destination, none of the wasted
+motion.
 
-It runs while you draw, so it costs no calendar time. It also means the token sheet you are
-filling in will actually govern the app, which today it would not — and that the app and the
-website will finally be speaking the same language.
+It runs while you draw, so it costs no calendar time. It also means the token sheet you fill
+in will actually govern the app, which today it would not.
 
----
+## 9. The brand is open
 
-## 9. The palette is open
+Earlier drafts of this brief asked whether the palette was locked. It is not, and neither is
+the rest of it. **You may build on the current brand to make it work digitally.**
 
-An earlier draft of this brief left this undecided. It is decided: **you may repoint the
-colours.** This is Get Lucky V2.
+That phrase is doing precise work, so here is what it means in practice.
 
-The forest/gold/cream palette in `design/01-tokens/tokens.csv` is taken from the live
-website and is the starting point — a considered, coherent scheme that works. But nothing
-in it is locked, and if V2 wants a different direction, propose it in the token sheet.
+### What is open
 
-Two consequences worth stating plainly:
+- **The palette.** The forest/gold/cream scheme in `design/01-tokens/tokens.csv` comes from the live website and is a considered, coherent starting point. Nothing in it is locked. Propose a different direction in the token sheet if V2 wants one.
+- **The typography**, within the licensing note in `01-tokens/README.md`.
+- **The wordmark itself.** The hand-lettered script is good, and it was drawn for print and signage — where it is never asked to survive at 24px, sit in a tab bar, animate, or share a row with an interface. You may redraw, simplify or restructure it so it works in a product.
+- **What the brand *is* in a digital context** — how it behaves in motion, at small sizes, under a status bar, in a dark surface, on a loading state. Almost none of that has ever been decided.
 
-- **The website will eventually follow the app, not the other way round.** `docs/brand-guide.md` in the app repository still says the live site wins where the two disagree. That rule is now retired. Whatever V2 lands on becomes the brand, and `getluckyjo/getlucky-www` gets brought in line afterwards.
-- **Repointing colour is cheap; repointing structure is not.** The token architecture, the naming, and the discipline of using tokens instead of literals should survive whatever you do to the values. That is what section 8 is putting in place.
+### What stays
+
+It should still be Get Lucky. This is an evolution built on the existing brand, not a
+replacement of it — someone who knows the current mark should recognise the new one. We are
+not commissioning a rebrand, and a proposal that discards the equity in the script is the
+one thing here that would be out of scope.
+
+### The consequence, stated plainly
+
+Whatever V2 lands on **becomes the brand**, and everything else trails it: the website at
+getluckygolf.co.za, signage, sponsor collateral, the bag tags. `docs/brand-guide.md` still
+carries an old rule that the live site wins where the site and the app disagree — that rule
+is retired.
+
+So the app is now the place the brand gets decided. Design accordingly.
 
 ## 10. Logistics and next steps
 
@@ -458,10 +543,15 @@ cannot be captured at all. Ask for a walkthrough of the play flow before designi
 **Questions.** Anything ambiguous in this brief is a defect in the brief. Ask, and it gets
 amended rather than guessed at.
 
+**One thing not to do.** Do not treat the current app as a design to improve incrementally.
+It is a working prototype whose look was never authored. Start from the product and the
+brand, not from those screenshots.
+
 ### Next steps
 
 1. Kick-off call.
 2. Read `design/README.md`, then `design/02-screens/_EXAMPLE.md`.
-3. Look through `design/00-reference/current-app/`.
-4. Deliver the pilot: two screens, the logo set, the icon set, both token sheets.
-5. Format retro, brief amended, remaining 25 screens released in waves.
+3. Look through `design/00-reference/current-app/` — as a functional reference, not a design.
+4. **Stage 0:** two or three visual directions on two screens, a rationale for each, the flow proposal if you want one, and a first pass at the wordmark question.
+5. Direction chosen. **Stage 1:** the pilot — those two screens resolved, plus the logo set, the icon set and both token sheets.
+6. Format retro, brief amended, remaining screens released in waves.

@@ -23,9 +23,17 @@ are in `logo/current/` so you have them to hand:
 **Ignore `public/logo.svg` in the app repository entirely.** It is an unrelated
 machine-traced path filled emerald `#007728` and it should be deleted, not redrawn.
 
-### What is actually missing
+### The wordmark is open
 
-The mark is fine. The delivery is not.
+It was drawn for print and signage, where it is never asked to survive at 24px, sit in a tab
+bar, animate, or share a row with an interface. **You may redraw, simplify or restructure it
+so it works in a product** — see section 9 of the brief. It should still read as Get Lucky;
+we are not commissioning a rebrand.
+
+If your Stage 0 directions treat the wordmark differently from one another, show that — it is
+one of the more consequential choices on the table.
+
+### What is missing either way
 
 1. **No vector master.** Every file is a PNG at roughly 2932 x 2195 and 269–305 KB. There is no `.ai`, `.svg` or `.eps` anywhere in either repository. Everything downstream is a resample of a raster.
 2. **No icon-only mark, and this is the real problem.** The lockup is hand-lettered script. It is beautiful at 200px and unreadable at 24px. A mobile app needs a mark that survives in a tab bar, a favicon, an app icon and an avatar — and one does not exist. **This is the single most valuable thing you can draw for us.**
@@ -35,7 +43,7 @@ The mark is fine. The delivery is not.
 
 | File | Spec |
 |---|---|
-| `logo-primary.svg` | The existing lockup, redrawn as true vector. Under 30 KB. |
+| `logo-primary.svg` | The primary lockup as true vector — the existing lettering, or your evolution of it. Under 30 KB. |
 | `logo-reversed.svg` | The dark-background variant, as vector. |
 | `logo-mono-dark.svg` / `logo-mono-cream.svg` | Single colour, for print and low-ink contexts. |
 | `mark.svg` | **New.** Icon only, square, legible at 24px. |

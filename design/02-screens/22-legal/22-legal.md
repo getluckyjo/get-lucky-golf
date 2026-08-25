@@ -1,11 +1,16 @@
 # 22 — Legal   (route: /terms)
 
-> Today this screen is: One shared template covering Terms, Privacy and Responsible Play.
+> Today this screen: One shared template covering Terms, Privacy and Responsible Play.
 > Source: `src/app/terms/page.tsx`
-> States required: default
+> States this function must handle: default
+>
+> This describes the job, not the layout. You are free to redesign it completely,
+> fold it into another screen, or split it — see section 3.4 of the brief.
 
 Comp: 22-legal__default.png   (375 x HEIGHT)
-Change type:           (RESKIN-ONLY | RESTRUCTURED | REBUILT)
+Change type:           (REDESIGNED | RECOMPOSED | NEW | ABSORBED | CARRIED-OVER)
+Replaces:              (RECOMPOSED only)
+Absorbed into:         (ABSORBED only)
 Scrolls: 
 Fixed on screen: 
 
@@ -17,7 +22,7 @@ Fixed on screen:
 ## Added / Removed / Kept
 - ADDED: 
 - REMOVED: 
-- KEPT: everything else in the same role as today
+- KEPT: 
 
 ## Final copy (everything not listed here is placeholder)
 - 

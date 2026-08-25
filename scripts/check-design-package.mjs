@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Validates a design handback against the contract in docs/Design-Reskin-Brief.md.
+ * Validates a design handback against the contract in docs/App-Redesign-Brief.md.
  * Run: npm run check:design
  *
  * Exits non-zero on any error so a package either passes or comes back with a
@@ -17,7 +17,9 @@ const TYPE_SCALE = path.join(ROOT, 'design/01-tokens/type-scale.csv')
 const ICONS_DIR = path.join(ROOT, 'design/03-assets/icons')
 
 const STATES = ['default','empty','loading','error','success','selected','modal','permission','blocked']
-const CHANGE_TYPES = ['RESKIN-ONLY','RESTRUCTURED','REBUILT']
+const CHANGE_TYPES = ['REDESIGNED','RECOMPOSED','NEW','ABSORBED','CARRIED-OVER']
+const NO_COMPS = ['ABSORBED']            // these screens deliberately ship nothing
+const NO_REDLINE = ['ABSORBED','CARRIED-OVER']
 const REQUIRED_SECTIONS = ['## Blocks, top to bottom','## Added / Removed / Kept','## Final copy','## Notes','## States delivered']
 const COMP_WIDTH = 750
 const MAX_BYTES = 1.5 * 1024 * 1024
@@ -25,6 +27,7 @@ const MAX_BYTES = 1.5 * 1024 * 1024
 const errors = []
 const warnings = []
 const notStarted = []
+const absorbed = []
 const err = (m) => errors.push(m)
 const warn = (m) => warnings.push(m)
 
@@ -49,11 +52,14 @@ const manifest = fs.readFileSync(MANIFEST, 'utf8').trim().split('\n').slice(1).m
 })
 
 // ── Folders match the manifest ──────────────────────────────────────────────
+const newScreens = []
 const onDisk = fs.existsSync(SCREENS_DIR)
   ? fs.readdirSync(SCREENS_DIR).filter(f => fs.statSync(path.join(SCREENS_DIR, f)).isDirectory())
   : []
 for (const f of onDisk) {
-  if (!manifest.some(m => m.folder === f)) err(`Unexpected folder design/02-screens/${f} — not in screens.tsv`)
+  if (manifest.some(m => m.folder === f)) continue
+  if (/^new-[a-z0-9-]+$/.test(f)) { newScreens.push(f); continue }
+  err(`Unexpected folder design/02-screens/${f} — not in screens.tsv. A screen that does not exist today must be named "new-<slug>".`)
 }
 for (const m of manifest) {
   if (!onDisk.includes(m.folder)) err(`Missing folder design/02-screens/${m.folder}`)
@@ -66,7 +72,27 @@ for (const m of manifest) {
   const files = fs.readdirSync(dir)
   const comps = files.filter(f => f.toLowerCase().endsWith('.png'))
 
-  if (comps.length === 0) { notStarted.push(m.folder); continue }
+  // An ABSORBED screen ships no comps on purpose — read its card before judging it.
+  const cardPath = path.join(dir, `${m.folder}.md`)
+  const cardText = fs.existsSync(cardPath) ? fs.readFileSync(cardPath, 'utf8') : ''
+  const declared = (cardText.match(/^Change type:\s*(\S+)/m) ?? [])[1]
+
+  if (comps.length === 0) {
+    if (NO_COMPS.includes(declared)) {
+      if (!/^Absorbed into:\s*\d/m.test(cardText)) {
+        err(`${m.folder} — marked ABSORBED but no "Absorbed into:" screen number given`)
+      } else {
+        absorbed.push(m.folder)
+      }
+    } else {
+      notStarted.push(m.folder)
+    }
+    continue
+  }
+  if (NO_COMPS.includes(declared)) {
+    err(`${m.folder} — marked ABSORBED but ships ${comps.length} comp(s). Absorbed screens go away.`)
+    continue
+  }
 
   const seenBase = new Map()
   for (const c of comps) {
@@ -87,7 +113,9 @@ for (const m of manifest) {
   }
 
   for (const state of m.states) {
-    if (!seenBase.has(state)) err(`${m.folder} — required state "${state}" has no comp`)
+    if (!seenBase.has(state)) {
+      err(`${m.folder} — state "${state}" has no comp. If it moved to another screen, say so in the card and in the flow proposal.`)
+    }
   }
 
   // ── The screen card ───────────────────────────────────────────────────────
@@ -98,10 +126,15 @@ for (const m of manifest) {
   const ct = text.match(/^Change type:\s*(\S+)/m)
   if (!ct || !CHANGE_TYPES.includes(ct[1])) {
     err(`${m.folder} — "Change type:" must be one of ${CHANGE_TYPES.join(' | ')}`)
-  } else if (ct[1] !== 'RESKIN-ONLY') {
-    const dflt = seenBase.get('default')
-    if (dflt && !comps.includes(dflt.replace('.png', '--redline.png'))) {
-      err(`${m.folder} — marked ${ct[1]} so it needs a redline twin: ${dflt.replace('.png','--redline.png')}`)
+  } else {
+    if (!NO_REDLINE.includes(ct[1])) {
+      const dflt = seenBase.get('default')
+      if (dflt && !comps.includes(dflt.replace('.png', '--redline.png'))) {
+        err(`${m.folder} — needs a redline twin: ${dflt.replace('.png','--redline.png')}`)
+      }
+    }
+    if (ct[1] === 'RECOMPOSED' && !/^Replaces:\s*\d/m.test(text)) {
+      err(`${m.folder} — marked RECOMPOSED but no "Replaces:" screen numbers given`)
     }
   }
   for (const s of REQUIRED_SECTIONS) {
@@ -160,18 +193,24 @@ if (fs.existsSync(ICONS_DIR)) {
 }
 
 // ── Report ──────────────────────────────────────────────────────────────────
-const started = manifest.length - notStarted.length
-console.log(`\nDesign package check — ${started}/${manifest.length} screens have comps\n`)
+const started = manifest.length - notStarted.length - absorbed.length
+console.log(`\nDesign package check — ${started}/${manifest.length - absorbed.length} screens have comps\n`)
 
 if (notStarted.length) {
   console.log(`Not started (${notStarted.length}): ${notStarted.join(', ')}\n`)
+}
+if (absorbed.length) {
+  console.log(`Absorbed into other screens (${absorbed.length}): ${absorbed.join(', ')}\n`)
+}
+if (newScreens.length) {
+  console.log(`New screens (${newScreens.length}): ${newScreens.join(', ')}\n`)
 }
 for (const w of warnings) console.log(`  warning  ${w}`)
 if (warnings.length) console.log('')
 for (const e of errors) console.log(`  ERROR    ${e}`)
 
 if (errors.length) {
-  console.log(`\n${errors.length} error${errors.length === 1 ? '' : 's'}. See section 4 of docs/Design-Reskin-Brief.md.\n`)
+  console.log(`\n${errors.length} error${errors.length === 1 ? '' : 's'}. See section 4 of docs/App-Redesign-Brief.md.\n`)
   process.exit(1)
 }
 console.log(started === 0

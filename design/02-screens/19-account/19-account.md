@@ -1,11 +1,16 @@
 # 19 — Account   (route: /account)
 
-> Today this screen is: Profile, stats, membership status, legal links, sign out.
+> Today this screen: Profile, stats, membership status, legal links, sign out.
 > Source: `src/app/(dashboard)/account/page.tsx`
-> States required: default
+> States this function must handle: default
+>
+> This describes the job, not the layout. You are free to redesign it completely,
+> fold it into another screen, or split it — see section 3.4 of the brief.
 
 Comp: 19-account__default.png   (375 x HEIGHT)
-Change type:           (RESKIN-ONLY | RESTRUCTURED | REBUILT)
+Change type:           (REDESIGNED | RECOMPOSED | NEW | ABSORBED | CARRIED-OVER)
+Replaces:              (RECOMPOSED only)
+Absorbed into:         (ABSORBED only)
 Scrolls: 
 Fixed on screen: 
 
@@ -17,7 +22,7 @@ Fixed on screen:
 ## Added / Removed / Kept
 - ADDED: 
 - REMOVED: 
-- KEPT: everything else in the same role as today
+- KEPT: 
 
 ## Final copy (everything not listed here is placeholder)
 - 

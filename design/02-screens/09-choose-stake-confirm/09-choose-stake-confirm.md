@@ -5,7 +5,7 @@
 > States required: modal
 
 Comp: 09-choose-stake-confirm__modal.png   (375 x HEIGHT)
-Change type:           (RESKIN-ONLY | RESTRUCTURED | REBUILT)
+Change type:           (REDESIGNED | RECOMPOSED | NEW | ABSORBED | CARRIED-OVER)
 Scrolls: 
 Fixed on screen: 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Renders docs/Design-Reskin-Brief.md to a styled PDF.
+ * Renders docs/App-Redesign-Brief.md to a styled PDF.
  * The markdown is the source of truth — regenerate after any edit:
  *
  *   npm i -D playwright --no-save && node scripts/build-brief.mjs
@@ -11,14 +11,14 @@
 import fs from 'node:fs'
 import { chromium } from 'playwright'
 
-const md = fs.readFileSync('docs/Design-Reskin-Brief.md', 'utf8')
+const md = fs.readFileSync('docs/App-Redesign-Brief.md', 'utf8')
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
 const inline = s => esc(s)
   .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   .replace(/`([^`]+)`/g, '<code>$1</code>')
   .replace(/(^|[^*])\*([^*]+)\*/g, '$1<em>$2</em>')
 
-const lines = md.split('\n')
+const lines = md.split('\n').map(l => /^\s{1,3}\|/.test(l) ? l.trimStart() : l)
 let html = '', i = 0, inList = null
 const closeList = () => { if (inList) { html += `</${inList}>`; inList = null } }
 
@@ -28,14 +28,16 @@ while (i < lines.length && !lines[i].startsWith('## 1.')) i++
 html += `<div class="cover">
   <h1 class="brand">GET LUCKY GOLF</h1>
   <p class="tagline">Insurance-backed hole-in-one gaming</p>
-  <h2 class="doctitle">Creative Direction &amp; Front-End Reskin Brief</h2>
-  <p class="lede">Scope of work for a creative director / lead designer to take the product
-  from a working but undesigned beta build to a designed public beta.</p>
+  <h2 class="doctitle">Creative Direction &amp; App Redesign Brief</h2>
+  <p class="lede">A full redesign of the Get Lucky Golf player app for public beta. The app
+  that exists today is a reference for <em>what the product does</em> — not for how it should
+  look, and not for how it should be put together.</p>
   <table class="meta">
     <tr><th>Prepared by</th><td>Johannes Le Roux, Founder</td></tr>
     <tr><th>Contact</th><td>johannes@getluckygolfclub.com</td></tr>
     <tr><th>Date</th><td>25 August 2026</td></tr>
     <tr><th>Status</th><td>Working beta — the app functions end to end; the visual layer has never been designed</td></tr>
+    <tr><th>Engagement</th><td>Full redesign. Get Lucky V2.</td></tr>
   </table>
 </div><div class="pagebreak"></div>`
 
@@ -123,13 +125,13 @@ const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromi
 const page = await browser.newPage()
 await page.goto('file:///tmp/brief.html', { waitUntil: 'networkidle' })
 await page.pdf({
-  path: 'docs/Design-Reskin-Brief.pdf', format: 'A4', printBackground: true,
+  path: 'docs/App-Redesign-Brief.pdf', format: 'A4', printBackground: true,
   margin: { top: '18mm', bottom: '18mm', left: '18mm', right: '18mm' },
   displayHeaderFooter: true,
   headerTemplate: '<div></div>',
   footerTemplate: `<div style="width:100%;font-family:Inter,sans-serif;font-size:7.5pt;color:#888;padding:0 18mm;display:flex;justify-content:space-between;">
-    <span>Get Lucky Golf — Creative Direction &amp; Front-End Reskin Brief</span>
+    <span>Get Lucky Golf — Creative Direction &amp; App Redesign Brief</span>
     <span class="pageNumber"></span></div>`,
 })
 await browser.close()
-console.log('wrote docs/Design-Reskin-Brief.pdf')
+console.log('wrote docs/App-Redesign-Brief.pdf')

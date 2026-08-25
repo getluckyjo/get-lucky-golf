@@ -4,11 +4,16 @@
 >
 > Tokens below were extracted from the live site on 2026-05-31, and the canonical source
 > is `getluckyjo/getlucky-www` — `src/app/globals.css`, eleven colour tokens and two font
-> families. That file is the base for the app's V2 reskin.
+> families. That file is the base for the app's V2 redesign.
 >
 > The old rule that "when the live site and the app disagree, the live site wins" is
-> **retired**. The palette is open for V2: see `docs/Design-Reskin-Brief.md` section 9.
-> Whatever V2 lands on becomes the brand, and the website follows afterwards.
+> **retired**. V2 is a full app redesign and **the brand is open** — palette, typography, and
+> the wordmark itself, which may be evolved so it works at small sizes and in motion. It
+> should still read as Get Lucky; it is not a rebrand. See `docs/App-Redesign-Brief.md`
+> section 9.
+>
+> The app is now where the brand gets decided. The website, signage and sponsor collateral
+> follow it.
 
 ---
 
@@ -84,7 +89,7 @@ generous line-height (~1.5–1.6).
   machine-traced path filled emerald `#007728`; what ships is a 292 KB PNG. Delete it.
 - ⚠️ **No vector master exists in either repository**, and **there is no icon-only mark** —
   the script lockup cannot survive at 24px in a tab bar or 32px as a favicon. Both are
-  commissioned in `docs/Design-Reskin-Brief.md`.
+  commissioned in `docs/App-Redesign-Brief.md`.
 - Placement: top-left of nav and repeated in footer.
 - Clear space and minimum sizes: keep generous padding; never place the coloured
   logo on a busy photo without a solid scrim.
@@ -145,7 +150,7 @@ referenced those tokens in the first place.
 Changing a token today changes very little, because most of the app never asks for one.
 Until that is fixed, this guide describes an intention rather than the product.
 
-Engineering action, tracked as part of the beta reskin: replace every hardcoded literal with
+Engineering action, tracked as part of the V2 redesign: replace every hardcoded literal with
 its token, collapse the duplicated `@theme inline` and `:root` declarations into one source
 of truth, and remove five dead token references (`--font-heading`, `--green-700`,
 `--green-800`, `--text-3xl`, `--text-base`) that currently resolve to nothing.
@@ -157,7 +162,7 @@ of truth, and remove five dead token references (`--font-heading`, `--green-700`
   is a single auto-vectorised path filled `#007728`, an off-brand emerald, and the app ships
   the 292 KB `logo.png` instead. There is no reversed lockup; dark backgrounds fake one with
   `filter: brightness(0) invert(1)`. A proper logo set is commissioned in
-  `docs/Design-Reskin-Brief.md`.
+  `docs/App-Redesign-Brief.md`.
 - **Poster Gothic is licensed as a single Heavy cut.** `globals.css` declares it
   `font-weight: 100 900`, which is not true — there is one weight. Any design needing a
   lighter display cut is a licensing purchase.
