@@ -20,7 +20,49 @@ export default function PaymentReturnPage() {
   const { selectCourse, selectTier, confirmPayment, setBetId } = useBet()
   const [status, setStatus] = useState<'processing' | 'error'>('processing')
   const [errorMsg, setErrorMsg] = useState('')
+  const [waiting, setWaiting] = useState(false)
   const didRun = useRef(false)
+
+  // Polls /api/bets/create until PayFast's ITN has landed. Total wait is capped;
+  // beyond that the payment is real but unconfirmed, which is an ops problem, not
+  // something the player can fix by waiting longer.
+  async function createBetWhenPaymentConfirms(
+    payload: { courseId: string; holeId: string; tier: string; m_payment_id: string },
+  ): Promise<{ betId: string }> {
+    const delaysMs = [0, 1500, 2500, 4000, 6000, 8000, 10000]
+
+    for (let attempt = 0; attempt < delaysMs.length; attempt++) {
+      if (delaysMs[attempt]) await new Promise(r => setTimeout(r, delaysMs[attempt]))
+
+      const res = await fetch('/api/bets/create', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          courseId: payload.courseId,
+          holeId:   payload.holeId,
+          tier:     payload.tier,
+          paymentIntentId: payload.m_payment_id,
+        }),
+      })
+
+      if (res.ok) return res.json()
+
+      const err = await res.json().catch(() => ({ error: 'Unknown error' }))
+
+      if (res.status === 202 && err.code === 'PAYMENT_PENDING') {
+        setWaiting(true)
+        continue
+      }
+
+      console.error('[PaymentReturn] Bet creation failed:', err)
+      throw new Error(err.error ?? 'Could not register your bet. Please contact support.')
+    }
+
+    throw new Error(
+      'Your payment went through, but we could not confirm it in time. ' +
+      'Nothing is lost — please contact support with reference ' + payload.m_payment_id + '.',
+    )
+  }
 
   useEffect(() => {
     // Prevent double-execution in React strict mode
@@ -45,25 +87,11 @@ export default function PaymentReturnPage() {
         selectTier(tier)
         confirmPayment(m_payment_id)
 
-        // ── 3. Create bet record in database ────────────────────────────────
-        const betRes = await fetch('/api/bets/create', {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            courseId,
-            holeId,
-            tier,
-            paymentIntentId: m_payment_id,
-          }),
-        })
-
-        if (!betRes.ok) {
-          const betErr = await betRes.json().catch(() => ({ error: 'Unknown error' }))
-          console.error('[PaymentReturn] Bet creation failed:', betErr)
-          throw new Error(betErr.error ?? 'Could not register your bet. Please contact support.')
-        }
-
-        const bet = await betRes.json()
+        // ── 3. Create the bet, once the payment is confirmed ────────────────
+        // The server only grants a bet after PayFast's ITN has verified the
+        // payment. That notification frequently arrives after the browser gets
+        // back here, so a 202 PAYMENT_PENDING is normal — poll rather than fail.
+        const bet = await createBetWhenPaymentConfirms({ courseId, holeId, tier, m_payment_id })
         setBetId(bet.betId)
 
         // ── 4. Clean up and redirect to record page ─────────────────────────
@@ -110,14 +138,16 @@ export default function PaymentReturnPage() {
               fontWeight: 700,
               marginBottom: 8,
             }}>
-              Setting Up Your Bet
+              {waiting ? 'Confirming Your Payment' : 'Setting Up Your Bet'}
             </h3>
             <p style={{
               fontSize: 14,
               opacity: 0.7,
               lineHeight: 1.5,
             }}>
-              Payment confirmed. Preparing your challenge...
+              {waiting
+                ? 'Waiting for confirmation from PayFast. This usually takes a few seconds — please don\u2019t close this page.'
+                : 'Payment confirmed. Preparing your challenge...'}
             </p>
           </>
         )}

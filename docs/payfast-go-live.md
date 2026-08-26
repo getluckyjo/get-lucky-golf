@@ -20,10 +20,45 @@ money moves.
    ([route](../src/app/api/payments/payfast/notify/route.ts)) server-to-server.
    This is the source of truth that a payment completed. It verifies the IP,
    the MD5 signature, phones home to PayFast to confirm the ITN is genuine,
-   checks the merchant ID, then marks the bet `active` and stores PayFast's
+   checks the merchant ID, then records the payment in the `payments` ledger, which is what lets the bet be created and stores PayFast's
    `pf_payment_id` for reconciliation.
 
 The browser redirect is **not** trusted for payment confirmation — only the ITN is.
+
+---
+
+## Step 0 — apply migration 005 FIRST (new, and order matters)
+
+`supabase/migrations/005_payment_verification.sql` adds the `payments` ledger
+that the ITN writes and that `/api/bets/create` checks before granting a bet.
+
+**Apply it before deploying the code that depends on it.** Bet creation fails
+closed without the table — nobody can play, rather than everybody playing free —
+which is the safe direction but is still an outage. If the ITN logs
+`relation "payments" does not exist`, this step was skipped.
+
+```bash
+# via the repo helper
+DATABASE_URL='...' node scripts/run-sql.mjs supabase/migrations/005_payment_verification.sql
+```
+
+It also adds a unique index on `bets.payment_intent_id`. `bets/create` already
+handled error 23505 on that column, but no constraint existed for it to catch,
+so two concurrent payment-return tabs could each create an active bet for one
+payment.
+
+### What changed in the payment path
+
+- The checkout now carries `user_id`, `course_id`, `hole_id` and `tier` in PayFast's `custom_str1..4`. They sit inside the signed payload, so they cannot be altered without breaking the MD5 signature.
+- The ITN verifies the **amount** against the tier before recording anything, then writes the `payments` row. It returns 500 if the ledger write fails, so PayFast retries rather than the payment being silently lost.
+- `/api/bets/create` no longer creates a bet from the browser's say-so. It requires a `complete` payments row belonging to the signed-in user, and builds the bet from **that** row's course, hole and tier — not the request body.
+- The ITN often beats the browser back. `/api/bets/create` therefore returns `202 PAYMENT_PENDING` when the ledger row has not landed yet, and `/payment-return` polls for about 30 seconds showing "Confirming Your Payment".
+
+**Operational consequence worth knowing:** the ITN is now on the critical path.
+If PayFast cannot reach `/api/payments/payfast/notify` — a new source IP outside
+`VALID_IPS`, a passphrase mismatch, a paused project — payments will succeed and
+no one will get a bet. That is the correct failure direction, but watch the ITN
+logs on go-live day. This has bitten before: commit `bfbfb0d`.
 
 ---
 

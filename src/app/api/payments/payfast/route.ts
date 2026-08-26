@@ -86,7 +86,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const { tier, userName = '' } = await request.json()
+    const { tier, userName = '', courseId = '', holeId = '' } = await request.json()
+
+    if (!courseId || !holeId) {
+      return NextResponse.json({ error: 'Missing course or hole' }, { status: 400 })
+    }
 
     const tierData = TIER_ZAR[tier as string]
     if (!tierData) {
@@ -117,6 +121,14 @@ export async function POST(request: NextRequest) {
       amount:        tierData.amount,
       item_name:     tierData.itemName,
       currency:      'ZAR',
+      // Who and what this payment is for. PayFast echoes these back on the ITN,
+      // and they sit inside the signed payload — so the browser cannot alter the
+      // user, course, hole or tier without breaking the MD5 signature. The ITN
+      // writes the payments ledger from these, never from client input.
+      custom_str1:   user.id,
+      custom_str2:   String(courseId),
+      custom_str3:   String(holeId),
+      custom_str4:   tier as string,
     }
 
     const signature = generateSignature(data, PASSPHRASE)
