@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     // phoned home to PayFast, and amount-matched against the tier. Before this,
     // any POST with an invented reference produced a live bet for free.
     const { data: payment, error: payErr } = await supabase
-      .from('payments')
+      .from('payfast_payments')
       .select('m_payment_id, user_id, course_id, hole_id, tier, amount_cents, status')
       .eq('m_payment_id', paymentIntentId)
       .maybeSingle()
