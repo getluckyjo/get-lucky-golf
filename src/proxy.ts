@@ -68,7 +68,13 @@ function checkRateLimit(request: NextRequest, pathname: string): NextResponse | 
 
 // ── Route config ──────────────────────────────────────────────────────────
 const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/home', '/history', '/leaderboard', '/account', '/membership', '/terms', '/privacy', '/responsible-play', '/app']
-const PLAY_ROUTES = ['/select-course', '/choose-stake', '/record', '/confirm', '/result', '/verify']
+// '/payment-return' is load-bearing here. PayFast sends the payer back to it
+// (return_url, api/payments/payfast/route.ts), and it is where the bet row is
+// created. Gated, a payer whose cookie went stale during the PayFast detour is
+// bounced to /auth — money taken, no bet, and pf_pending never consumed.
+// '/age-check' is reached by redirect from the auth callback; gating it turns a
+// bad cookie into a redirect loop.
+const PLAY_ROUTES = ['/select-course', '/choose-stake', '/payment-return', '/record', '/confirm', '/result', '/verify', '/age-check']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
