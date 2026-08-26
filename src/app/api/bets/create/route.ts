@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { BET_TIERS } from '@/lib/tiers'
+import { verifyPaymentAmount } from '@/lib/payments'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,8 +13,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
-    const tierData = BET_TIERS.find(t => t.tier === tier)
-    if (!tierData) {
+    // Body tier is advisory — the authoritative tier comes from the payments
+    // ledger below. Rejecting an unknown one early still saves a round trip.
+    if (!BET_TIERS.some(t => t.tier === tier)) {
       return NextResponse.json({ error: 'Invalid tier' }, { status: 400 })
     }
 
@@ -39,6 +41,8 @@ export async function POST(request: NextRequest) {
     }
 
     // ── Idempotency guard: return existing bet if payment already processed ──
+    // Matches either reference: the bet is created against m_payment_id, and the
+    // ITN later swaps it for PayFast's pf_payment_id.
     const { data: existing } = await supabase
       .from('bets')
       .select('id')
@@ -49,15 +53,73 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ betId: existing.id })
     }
 
+    // ── Proof of payment ──────────────────────────────────────────────────
+    // The browser is not trusted here. A bet only exists once the PayFast ITN
+    // has written a verified row to the payments ledger — signature-checked,
+    // phoned home to PayFast, and amount-matched against the tier. Before this,
+    // any POST with an invented reference produced a live bet for free.
+    const { data: payment, error: payErr } = await supabase
+      .from('payments')
+      .select('m_payment_id, user_id, course_id, hole_id, tier, amount_cents, status')
+      .eq('m_payment_id', paymentIntentId)
+      .maybeSingle()
+
+    if (payErr) {
+      console.error('[bets/create] Payments lookup failed:', payErr.message)
+      return NextResponse.json(
+        { error: 'Could not verify payment', code: 'PAYMENT_LOOKUP_FAILED' },
+        { status: 500 },
+      )
+    }
+
+    if (!payment) {
+      // Either the ITN has not landed yet (common — PayFast often beats the
+      // browser back) or no such payment exists. Both are "not yet", not an
+      // error: the client polls. Never fall through to creating a bet.
+      return NextResponse.json(
+        { error: 'Waiting for payment confirmation', code: 'PAYMENT_PENDING' },
+        { status: 202 },
+      )
+    }
+
+    if (payment.status !== 'complete') {
+      console.error(`[bets/create] Payment ${paymentIntentId} is ${payment.status} — refusing`)
+      return NextResponse.json(
+        { error: 'Payment could not be verified', code: 'PAYMENT_NOT_VERIFIED' },
+        { status: 402 },
+      )
+    }
+
+    if (payment.user_id !== user.id) {
+      console.error(`[bets/create] Payment ${paymentIntentId} belongs to another user — refusing`)
+      return NextResponse.json(
+        { error: 'Payment could not be verified', code: 'PAYMENT_NOT_VERIFIED' },
+        { status: 402 },
+      )
+    }
+
+    // Course, hole and tier come from the signed PayFast payload the ITN
+    // recorded, not from the request body — so they cannot be swapped for a
+    // bigger prize after paying for a smaller one.
+    const amountCheck = verifyPaymentAmount(payment.tier ?? '', payment.amount_cents)
+    const paidTier = BET_TIERS.find(t => t.tier === payment.tier)
+    if (!amountCheck.ok || !paidTier) {
+      console.error(`[bets/create] Payment ${paymentIntentId} tier/amount inconsistent — refusing`)
+      return NextResponse.json(
+        { error: 'Payment could not be verified', code: 'PAYMENT_NOT_VERIFIED' },
+        { status: 402 },
+      )
+    }
+
     const { data: bet, error } = await supabase
       .from('bets')
       .insert({
         user_id:             user.id,
-        course_id:           courseId,
-        hole_id:             holeId,
-        tier,
-        stake_pence:         tierData.stakeZAR * 100,
-        potential_win_pence: tierData.winZAR   * 100,
+        course_id:           payment.course_id ?? courseId,
+        hole_id:             payment.hole_id   ?? holeId,
+        tier:                paidTier.tier,
+        stake_pence:         paidTier.stakeZAR * 100,
+        potential_win_pence: paidTier.winZAR   * 100,
         payment_intent_id:   paymentIntentId,
         status:              'active',
       })
@@ -65,7 +127,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (error) {
-      // Handle unique constraint violation (concurrent duplicate insert)
+      // Unique violation — a concurrent request won the race. Read theirs back.
       if (error.code === '23505') {
         const { data: duplicate } = await supabase
           .from('bets')

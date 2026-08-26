@@ -1,0 +1,37 @@
+group,token,current_value,new_value,source,used_for,notes
+colour,--background,#f5f0e1,,getlucky-www,"The page background. Cream.",
+colour,--foreground,#1a1a1a,,getlucky-www,"Primary body text. Not pure black.",
+colour,--green,#335231,,getlucky-www,"The brand green. Primary buttons, headings on cream, active states.",
+colour,--green-light,#4a7a3d,,getlucky-www,"Accents, hover, secondary green.",
+colour,--green-dark,#1e3120,,getlucky-www,"Deep forest. Hero panels, dark sections, footers.",
+colour,--cream,#f5f0e1,,getlucky-www,"Cream surface. Same value as background.",
+colour,--cream-dark,#e8e0cc,,getlucky-www,"Secondary surface, borders, subtle fills.",
+colour,--gold,#c9a94e,,getlucky-www,"Prize and win emphasis, premium accents, focus ring.",
+colour,--gold-light,#e8d48b,,getlucky-www,"Gradients and highlights.",
+colour,--charcoal,#2a2a2a,,getlucky-www,"Strong secondary text, dark UI.",
+colour,--charcoal-light,#3a3a3a,,getlucky-www,"Secondary text.",
+colour,--red,#e40014,,app-only,"Errors, the live REC badge, destructive actions.","The website has no error state and so no red. The app needs one."
+colour,--muted,NEW,,app-only,"Tertiary text — captions, meta, helper text.","The app currently uses #999 here, which fails contrast at 2.66:1. Needs a value that passes. See the contrast table."
+colour,--border-card,#e8e0cc,,derived,"Card borders.","Currently an untokenised #e8e4dc in the app. Proposed: fold into --cream-dark."
+colour,--border-input,#ddd8ce,,app-only,"Input and secondary-button borders.","Not in the website. Confirm or replace."
+colour,--surface,#ffffff,,app-only,"White card surfaces sitting on cream.","The app leans on white cards heavily; the website does not. Worth a look."
+space,--space-xs,4,,app-only,"Tightest gap. Pixels at 375 width.","The website uses Tailwind's default spacing. The app has its own fluid scale — see the note below."
+space,--space-sm,8,,app-only,"Small gap between related items.",
+space,--space-md,12,,app-only,"Standard gap between stacked elements.",
+space,--space-lg,16,,app-only,"Section spacing.",
+space,--space-xl,20,,app-only,"Large section spacing.",
+space,--space-2xl,28,,app-only,"Screen-level spacing and bottom padding.",
+space,--page-px,16,,app-only,"Left and right page gutter.",
+space,--tab-bar-h,120,,app-only,"Bottom tab bar height including the sponsor banner.","15% of an 812pt screen. You may reduce it — see section 4.6 of the brief."
+radius,--radius-sm,6,,app-only,"Inputs and small chips.",
+radius,--radius-md,10,,app-only,"Buttons, cards, most surfaces.",
+radius,--radius-lg,14,,app-only,"Hero cards, bottom sheets, large surfaces.",
+radius,--radius-pill,20,,app-only,"Filter chips and pills.",
+radius,--radius-focus,4,,getlucky-www,"Radius of the keyboard focus ring.",
+elevation,--shadow-card,"0 4px 16px rgba(0,0,0,0.06)",,app-only,"Raised surfaces and card hover.","Format: x y blur colour. The website is flat and uses no shadows."
+elevation,--shadow-raised,"0 4px 20px rgba(30,49,32,0.12)",,app-only,"Selected cards.",
+elevation,--shadow-sheet,"0 8px 28px rgba(0,0,0,0.30)",,app-only,"Toasts and bottom sheets.",
+focus,--focus-ring,"2px solid var(--gold)",,getlucky-www,"Keyboard focus indicator, 2px offset.","Carried over from the website. Keep gold unless you have a reason."
+motion,--ease-entrance,"cubic-bezier(0.16, 1, 0.3, 1)",,app-only,"The app's expo-out entrance curve.","The website has no entrance motion beyond smooth scrolling."
+motion,--duration-fast,150,,app-only,"Milliseconds. Hover, border and background transitions.",
+motion,--duration-entrance,400,,app-only,"Milliseconds. Screen and element entrances.",

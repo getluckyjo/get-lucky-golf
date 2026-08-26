@@ -51,6 +51,10 @@ export default function ChooseStakePage() {
         body: JSON.stringify({
           tier: selected,
           userName: profile?.name ?? user?.user_metadata?.full_name ?? '',
+          // Carried into the signed PayFast payload so the ITN can record what
+          // was actually paid for — the bet is built from that, not from here.
+          courseId: selectedCourse?.id,
+          holeId:   selectedHole?.id,
         }),
       })
       const pfData = await pfRes.json()

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import crypto from 'crypto'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { parseAmountToCents, verifyPaymentAmount } from '@/lib/payments'
 
 const MERCHANT_ID = (process.env.PAYFAST_MERCHANT_ID ?? '10000100').trim()
 const PASSPHRASE  = (process.env.PAYFAST_PASSPHRASE  ?? '').trim()
@@ -119,40 +120,79 @@ export async function POST(request: NextRequest) {
       return new NextResponse('OK', { status: 200 })
     }
 
-    // ── 6. Update the bet record ──────────────────────────────────────────
-    // m_payment_id (our reference) was stored as payment_intent_id at bet creation.
-    // We swap it for PayFast's own pf_payment_id so we can reconcile payouts later.
-    //
-    // IMPORTANT: we deliberately do NOT write `status` here. Bets are created with
-    // status 'active' by /api/bets/create, so re-affirming 'active' is redundant —
-    // and a late ITN (arriving after the player has already taken their shot) would
-    // otherwise overwrite a resolved result ('miss'/'claimed'/'verified'/'paid')
-    // back to 'active'. The ITN only confirms payment; it must never clobber play.
-    const mPaymentId  = params.m_payment_id  ?? ''
-    const pfPaymentId = params.pf_payment_id ?? ''
+    // ── 6. Verify the amount matches the tier we sold ─────────────────────
+    // Signature + validate prove PayFast sent this, not that it is for the
+    // right money. custom_str4 carries the tier from our own signed checkout
+    // payload, so comparing against it detects a tampered amount.
+    const mPaymentId  = (params.m_payment_id  ?? '').trim()
+    const pfPaymentId = (params.pf_payment_id ?? '').trim()
+    const tier        = (params.custom_str4   ?? '').trim()
+    const userId      = (params.custom_str1   ?? '').trim()
+    const courseId    = (params.custom_str2   ?? '').trim()
+    const holeId      = (params.custom_str3   ?? '').trim()
 
-    if (mPaymentId) {
-      try {
-        const supabase = createAdminClient()
+    const amountCents = parseAmountToCents(params.amount_gross)
+    const check       = verifyPaymentAmount(tier, amountCents)
+    const amountOk    = check.ok
+    if (!check.ok) {
+      console.error(
+        `[PayFast ITN] ⚠️ ${check.reason.toUpperCase()} — ${mPaymentId} tier:${tier || '(none)'} ` +
+        `paid:${amountCents}c expected:${check.expectedCents ?? '(unknown tier)'}c. Not granting a bet.`,
+      )
+    }
 
-        const { error, data } = await supabase
-          .from('bets')
-          .update({ payment_intent_id: pfPaymentId || mPaymentId })
-          .eq('payment_intent_id', mPaymentId)
-          .select('id')
+    if (!mPaymentId) {
+      console.error('[PayFast ITN] COMPLETE with no m_payment_id — cannot record')
+      return new NextResponse('OK', { status: 200 })
+    }
 
-        if (error) {
-          // Non-fatal: bet row may not exist yet if ITN arrives before bets/create finishes
-          console.warn('[PayFast ITN] DB update warning:', error.message)
-        } else {
-          console.log(
-            `[PayFast ITN] ✅ Payment confirmed — ${mPaymentId} → pf:${pfPaymentId} (${data?.length ?? 0} row(s) updated)`,
-          )
-        }
-      } catch (dbErr) {
-        // SUPABASE_SERVICE_ROLE_KEY not configured — log and continue
-        console.warn('[PayFast ITN] Could not update bet (service role key missing?):', dbErr)
+    try {
+      const supabase = createAdminClient()
+
+      // ── 7. Record the payment. This ledger is what /api/bets/create checks;
+      // until a row lands here, no bet exists for this payment.
+      const { error: payErr } = await supabase
+        .from('payments')
+        .upsert(
+          {
+            m_payment_id:  mPaymentId,
+            pf_payment_id: pfPaymentId || null,
+            user_id:       userId   || null,
+            course_id:     courseId || null,
+            hole_id:       holeId   || null,
+            tier:          check.ok ? tier : null,
+            amount_cents:  amountCents,
+            status:        amountOk ? 'complete' : 'amount_mismatch',
+            raw_payload:   params,
+          },
+          { onConflict: 'm_payment_id' },
+        )
+
+      if (payErr) {
+        // Fail loudly. PayFast will retry, and a missing ledger row means the
+        // payer cannot get their bet — this must not pass silently.
+        console.error(
+          `[PayFast ITN] ❌ Could not record payment ${mPaymentId}: ${payErr.message}. ` +
+          'If this says the relation "payments" does not exist, migration 005 has not been applied.',
+        )
+        return new NextResponse('Ledger write failed', { status: 500 })
       }
+
+      console.log(`[PayFast ITN] ✅ Payment recorded — ${mPaymentId} → pf:${pfPaymentId} (${amountCents}c)`)
+
+      // ── 8. If the bet already exists, swap our reference for PayFast's so
+      // payouts reconcile. Never writes `status`: a late ITN must not reset a
+      // resolved result ('miss'/'claimed'/'verified'/'paid') back to 'active'.
+      if (pfPaymentId) {
+        const { error: betErr } = await supabase
+          .from('bets')
+          .update({ payment_intent_id: pfPaymentId })
+          .eq('payment_intent_id', mPaymentId)
+        if (betErr) console.warn('[PayFast ITN] Bet reference swap warning:', betErr.message)
+      }
+    } catch (dbErr) {
+      console.error('[PayFast ITN] ❌ Admin client unavailable (SUPABASE_SERVICE_ROLE_KEY?):', dbErr)
+      return new NextResponse('Ledger write failed', { status: 500 })
     }
 
     // Always return 200 so PayFast stops retrying

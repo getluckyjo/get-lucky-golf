@@ -14,9 +14,10 @@ import { describe, it, expect } from 'vitest'
 
 // ─── Tier Validation ─────────────────────────────────────────────────────────
 import { BET_TIERS } from '@/lib/tiers'
+import { verifyPaymentAmount, parseAmountToCents, expectedStakeCents } from '@/lib/payments'
 
 describe('BET_TIERS', () => {
-  it('has exactly 5 tiers', () => {
+  it('has exactly 6 tiers', () => {
     expect(BET_TIERS).toHaveLength(6)
   })
 
@@ -354,6 +355,78 @@ describe('Course Seed Data Integrity', () => {
 
     for (const tier of BET_TIERS) {
       expect(TIER_ZAR[tier.tier]).toBe(tier.stakeZAR)
+    }
+  })
+})
+
+// ─── Payment Verification ────────────────────────────────────────────────────
+// A bet is only granted once the PayFast ITN has recorded a payment whose amount
+// matches the tier it was signed for. Before this existed, /api/bets/create
+// inserted an active bet from a payment reference the browser made up.
+describe('Payment amount verification', () => {
+  it('accepts the exact stake for every tier we sell', () => {
+    for (const t of BET_TIERS) {
+      const check = verifyPaymentAmount(t.tier, t.stakeZAR * 100)
+      expect(check.ok, `${t.tier} should verify`).toBe(true)
+    }
+  })
+
+  it('rejects paying less than the tier costs', () => {
+    // The attack this closes: pay R50, claim the R1,000,000 tier.
+    const cheapest = BET_TIERS[0]
+    const dearest = BET_TIERS[BET_TIERS.length - 1]
+    const check = verifyPaymentAmount(dearest.tier, cheapest.stakeZAR * 100)
+    expect(check.ok).toBe(false)
+    if (!check.ok) {
+      expect(check.reason).toBe('amount_mismatch')
+      expect(check.expectedCents).toBe(dearest.stakeZAR * 100)
+    }
+  })
+
+  it('rejects a one-cent shortfall', () => {
+    const t = BET_TIERS[0]
+    expect(verifyPaymentAmount(t.tier, t.stakeZAR * 100 - 1).ok).toBe(false)
+  })
+
+  it('rejects overpayment too — it signals a tampered form, not generosity', () => {
+    const t = BET_TIERS[0]
+    expect(verifyPaymentAmount(t.tier, t.stakeZAR * 100 + 1).ok).toBe(false)
+  })
+
+  it('rejects a tier we do not sell', () => {
+    const check = verifyPaymentAmount('tier_99', 5000)
+    expect(check.ok).toBe(false)
+    if (!check.ok) expect(check.reason).toBe('unknown_tier')
+  })
+
+  it('rejects an empty or missing tier', () => {
+    expect(verifyPaymentAmount('', 5000).ok).toBe(false)
+  })
+
+  it('rejects a non-numeric amount rather than treating it as zero', () => {
+    const check = verifyPaymentAmount('tier_1', parseAmountToCents('not-a-number'))
+    expect(check.ok).toBe(false)
+  })
+
+  it('parses PayFast decimal strings into exact cents', () => {
+    // Float maths on money is how you end up 1c out and reject a real payment.
+    expect(parseAmountToCents('50.00')).toBe(5000)
+    expect(parseAmountToCents('1000.00')).toBe(100000)
+    expect(parseAmountToCents('150.00')).toBe(15000)
+    expect(parseAmountToCents('0.10')).toBe(10)
+    expect(parseAmountToCents('0.29')).toBe(29)
+  })
+
+  it('exposes the expected stake per tier, and null for unknown tiers', () => {
+    expect(expectedStakeCents('tier_1')).toBe(5000)
+    expect(expectedStakeCents('nope')).toBeNull()
+  })
+
+  it('every tier stake round-trips through the PayFast decimal format', () => {
+    // The checkout sends "50.00"; the ITN returns it. Both must agree in cents.
+    for (const t of BET_TIERS) {
+      const asPayFastSends = t.stakeZAR.toFixed(2)
+      expect(parseAmountToCents(asPayFastSends)).toBe(t.stakeZAR * 100)
     }
   })
 })

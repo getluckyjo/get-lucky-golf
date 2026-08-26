@@ -25,7 +25,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
+  // Stable instance — createClient() in the render body built a new client on
+  // every render, re-subscribing auth listeners each time.
+  const [supabase] = useState(createClient)
   const profileLoadedRef = useRef<string | null>(null)
 
   async function loadProfile(userId: string, force = false) {
