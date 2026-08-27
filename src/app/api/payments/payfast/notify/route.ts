@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
       // ── 7. Record the payment. This ledger is what /api/bets/create checks;
       // until a row lands here, no bet exists for this payment.
       const { error: payErr } = await supabase
-        .from('payments')
+        .from('payfast_payments')
         .upsert(
           {
             m_payment_id:  mPaymentId,
@@ -173,7 +173,7 @@ export async function POST(request: NextRequest) {
         // payer cannot get their bet — this must not pass silently.
         console.error(
           `[PayFast ITN] ❌ Could not record payment ${mPaymentId}: ${payErr.message}. ` +
-          'If this says the relation "payments" does not exist, migration 005 has not been applied.',
+          'If this says the relation "payfast_payments" does not exist, migration 005 has not been applied.',
         )
         return new NextResponse('Ledger write failed', { status: 500 })
       }

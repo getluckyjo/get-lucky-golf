@@ -5,17 +5,23 @@
 -- payment reference supplied by the browser. Nothing confirmed that money had
 -- actually moved, so a crafted POST produced a live bet for free.
 --
--- This adds a payments ledger that only the PayFast ITN writes to (via the
--- service-role client). Bet creation now requires a matching 'complete' row.
--- The ledger doubles as the payout reconciliation record the launch brief asks
--- for: one row per PayFast transaction, with the amount PayFast reported.
+-- This adds a ledger that only the PayFast ITN writes to (via the service-role
+-- client). Bet creation now requires a matching 'complete' row. It doubles as
+-- the payout reconciliation record the launch brief asks for.
+--
+-- NAMING: deliberately `payfast_payments`, not `payments`. This Supabase project
+-- already has a `payments` table belonging to the subscriptions/membership
+-- funnel. An earlier draft of this migration used `payments` with
+-- `create table if not exists`, which silently no-op'd against that table and
+-- then failed on the index — masking the collision instead of reporting it.
+-- No `if not exists` here: if the name is ever taken, this should fail loudly.
 --
 -- APPLY THIS BEFORE DEPLOYING THE ACCOMPANYING CODE. Without it, bet creation
 -- fails closed (nobody can play) rather than open (free bets) — deliberate, but
 -- it is an outage until the table exists.
 -- ----------------------------------------------------------------
 
-create table if not exists public.payments (
+create table public.payfast_payments (
   id uuid primary key default gen_random_uuid(),
 
   -- Our reference, generated at checkout (gl_<tier>_<ts>). Unique so a repeated
@@ -45,16 +51,15 @@ create table if not exists public.payments (
   created_at timestamptz not null default now()
 );
 
-create index if not exists payments_user_id_idx on public.payments (user_id);
-create index if not exists payments_pf_payment_id_idx on public.payments (pf_payment_id);
+create index payfast_payments_user_id_idx on public.payfast_payments (user_id);
+create index payfast_payments_pf_payment_id_idx on public.payfast_payments (pf_payment_id);
 
-alter table public.payments enable row level security;
+alter table public.payfast_payments enable row level security;
 
 -- Users may read their own payments; nobody may write through the anon/authed
 -- key. Writes happen exclusively through the service-role client in the ITN.
-drop policy if exists "Users can view their own payments" on public.payments;
-create policy "Users can view their own payments"
-  on public.payments for select
+create policy "Users can view their own payfast payments"
+  on public.payfast_payments for select
   using (auth.uid() = user_id);
 
 -- ----------------------------------------------------------------

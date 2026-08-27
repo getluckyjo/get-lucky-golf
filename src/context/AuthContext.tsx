@@ -12,7 +12,7 @@ interface AuthContextValue {
   session: Session | null
   profile: Profile | null
   loading: boolean
-  signInWithGoogle: () => Promise<void>
+  signInWithGoogle: (next?: string) => Promise<void>
   signInWithMagicLink: (email: string) => Promise<{ error: string | null }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -72,12 +72,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  async function signInWithGoogle() {
+  // `next` is where to land after the callback. The callback allow-lists it
+  // against SAFE_PATHS, so an unexpected value falls back to /home rather than
+  // becoming an open redirect.
+  async function signInWithGoogle(next?: string) {
+    const callback = new URL('/auth/callback', window.location.origin)
+    if (next) callback.searchParams.set('next', next)
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
+      options: { redirectTo: callback.toString() },
     })
   }
 

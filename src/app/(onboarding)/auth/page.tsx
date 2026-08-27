@@ -13,14 +13,16 @@ function AuthForm() {
   const [loading, setLoading] = useState(false)
 
   const oauthError = searchParams.get('error')
+  // Set by the middleware when it bounced someone off a signed-in-only route.
+  const next = searchParams.get('next')
 
   useEffect(() => {
-    if (user) router.push('/home')
-  }, [user, router])
+    if (user) router.push(next ?? '/home')
+  }, [user, next, router])
 
   async function handleGoogleLogin() {
     setLoading(true)
-    await signInWithGoogle()
+    await signInWithGoogle(next ?? undefined)
   }
 
   return (
@@ -36,9 +38,11 @@ function AuthForm() {
 
         {/* Sign-in content */}
         <div className="auth-content">
-          <h3 className="auth-card-title">Sign In</h3>
+          <h3 className="auth-card-title">{next ? 'Sign in to play' : 'Sign In'}</h3>
           <p className="auth-card-sub">
-            Bet on your next hole-in-one shot.
+            {next
+              ? 'You need an account before you can place a bet. It takes one tap.'
+              : 'Bet on your next hole-in-one shot.'}
           </p>
 
           {oauthError && (
