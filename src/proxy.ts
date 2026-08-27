@@ -67,14 +67,29 @@ function checkRateLimit(request: NextRequest, pathname: string): NextResponse | 
 }
 
 // ── Route config ──────────────────────────────────────────────────────────
-const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/home', '/history', '/leaderboard', '/account', '/membership', '/terms', '/privacy', '/responsible-play', '/app']
-// '/payment-return' is load-bearing here. PayFast sends the payer back to it
-// (return_url, api/payments/payfast/route.ts), and it is where the bet row is
-// created. Gated, a payer whose cookie went stale during the PayFast detour is
-// bounced to /auth — money taken, no bet, and pf_pending never consumed.
-// '/age-check' is reached by redirect from the auth callback; gating it turns a
-// bad cookie into a redirect loop.
-const PLAY_ROUTES = ['/select-course', '/choose-stake', '/payment-return', '/record', '/confirm', '/result', '/verify', '/age-check']
+// Reachable signed out. Marketing, legal, and the sign-in flow itself.
+const PUBLIC_ROUTES = ['/splash', '/onboarding', '/auth', '/terms', '/privacy', '/responsible-play', '/app']
+
+// Reachable signed out because the app still shows something useful, or because
+// bouncing would be worse than letting them through:
+//   /payment-return — PayFast returns the payer here and the bet row is created
+//     here. Gating it means a cookie that went stale during the checkout detour
+//     costs someone their money. It handles its own missing-session errors.
+//   /age-check      — reached by redirect straight from /auth/callback. Gating it
+//     turns a slow cookie write into a redirect loop back to /auth.
+const UNGATED_ROUTES = ['/payment-return', '/age-check']
+
+// Dashboard surfaces. Public today: /leaderboard is a shop window, and /home
+// renders a signed-out state. Left as they are — see the note on /account below.
+const DASHBOARD_ROUTES = ['/home', '/history', '/leaderboard', '/account', '/membership']
+
+// The play flow. These REQUIRE a session.
+//
+// They used to be ungated, which meant a signed-out visitor could walk all the
+// way to "Pay R50 & Play" and get a raw "Not authenticated" string from
+// /api/payments/payfast — the API was right to refuse, the flow was wrong to let
+// them get that far. Sign-in now happens before a stake is chosen, not after.
+const PLAY_ROUTES = ['/select-course', '/choose-stake', '/record', '/confirm', '/result', '/verify']
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
@@ -83,15 +98,16 @@ export async function proxy(request: NextRequest) {
   const rateLimitResponse = checkRateLimit(request, pathname)
   if (rateLimitResponse) return rateLimitResponse
 
-  // API routes, public routes, play routes, and admin routes need no middleware auth
-  // (Admin routes handle their own auth in the admin layout and API handlers)
+  // API routes and admin routes handle their own auth (admin in its layout and
+  // handlers; API routes with getUser() per route).
   if (
     pathname === '/' ||
     pathname.startsWith('/api/') ||
     pathname.startsWith('/admin') ||
-    PUBLIC_ROUTES.some(r => pathname.startsWith(r)) ||
     pathname.startsWith('/auth/callback') ||
-    PLAY_ROUTES.some(r => pathname.startsWith(r))
+    PUBLIC_ROUTES.some(r => pathname.startsWith(r)) ||
+    UNGATED_ROUTES.some(r => pathname.startsWith(r)) ||
+    DASHBOARD_ROUTES.some(r => pathname.startsWith(r))
   ) {
     return NextResponse.next({ request })
   }
@@ -126,6 +142,13 @@ export async function proxy(request: NextRequest) {
   if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth'
+    url.search = ''
+    // Carry the intent through sign-in. Anywhere in the play flow comes back to
+    // the top of it: /choose-stake and beyond need bet state this session no
+    // longer has, so landing there would only bounce again.
+    if (PLAY_ROUTES.some(r => pathname.startsWith(r))) {
+      url.searchParams.set('next', '/select-course')
+    }
     return NextResponse.redirect(url)
   }
 
